@@ -20,15 +20,14 @@ public class AiServiceImpl implements AiService {
     @Override
     public AIResponse analyzeResume(String resumeText, String jdText) {
 
-/*        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
+        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
                 .replace("{{resumeText}}", resumeText)
                 .replace("{{jdText}}", jdText);
         var chat = chatClient
                 .prompt()
                 .user(userPrompt)
                 .call()
-                .content();*/
-        var chat = PromptResponse.RESPONSE;
+                .content();
         AIResponse response = resultSaveService.saveResult(resumeText, jdText, chat);
         return response;
     }
