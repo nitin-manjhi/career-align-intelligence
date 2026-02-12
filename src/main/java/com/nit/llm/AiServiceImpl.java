@@ -12,11 +12,6 @@ public class AiServiceImpl implements AiService {
     private final ChatClient chatClient;
     private final ResultSaveService resultSaveService;
 
-    /**
-     * @param resumeText
-     * @param jdText
-     * @return
-     */
     @Override
     public AIResponse analyzeResume(String resumeText, String jdText) {
 
@@ -28,7 +23,6 @@ public class AiServiceImpl implements AiService {
                 .user(userPrompt)
                 .call()
                 .content();
-        AIResponse response = resultSaveService.saveResult(resumeText, jdText, chat);
-        return response;
+        return resultSaveService.saveResult(resumeText, jdText, chat);
     }
 }
