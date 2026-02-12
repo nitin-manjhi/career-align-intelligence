@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: career-align-intelligence
+  ai:
+    ollama:
+      base-url: https://ollama.com  # Or the specific cloud gateway provided by Ollama
+      chat:
+        options:
+          #          model: qwen3-vl:235b-cloud
+          #          model: nemotron-3-nano:30b-cloud
+          #          model: gemma3:4b-cloud
+          model: gemma3:12b-cloud
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/resumeDb
+    username: postgres
+    password: Srcem@123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+logging:
+  level:
+    org.springframework.ai:
+      chat.client: DEBUG
