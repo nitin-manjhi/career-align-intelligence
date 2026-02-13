@@ -9,5 +9,7 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest request);
 
+    AuthResponse refresh();
+
     void logout();
 }

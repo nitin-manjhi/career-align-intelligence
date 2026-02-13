@@ -30,7 +30,7 @@ public class AuthUtil {
                 .subject(user.getUsername())
                 .claim("userId", user.getId().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000*60*100))
+                .expiration(new Date(System.currentTimeMillis() + 599 * 1000))
                 .signWith(getSecretKey())
                 .compact();
     }
@@ -49,7 +49,7 @@ public class AuthUtil {
 
     public Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null || !(authentication.getPrincipal() instanceof JwtUserPrincipal userPrincipal)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtUserPrincipal userPrincipal)) {
             throw new AuthenticationCredentialsNotFoundException("No JWT Found");
         }
         return userPrincipal.userId();

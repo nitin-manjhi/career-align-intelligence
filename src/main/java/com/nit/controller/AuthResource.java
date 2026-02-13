@@ -35,10 +35,9 @@ public class AuthResource {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<UserProfileResponse> getProfile() {
-        Long userId = 1L;
-        return ResponseEntity.ok(userService.getProfile(userId));
+    @GetMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh() {
+        return ResponseEntity.ok(authService.refresh());
     }
 
     @PostMapping("/logout")

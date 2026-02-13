@@ -1,6 +1,5 @@
 package com.nit.security;
 
-
 import com.nit.dto.auth.AuthResponse;
 import com.nit.dto.auth.LoginRequest;
 import com.nit.dto.auth.SignupRequest;
@@ -46,10 +45,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
+                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
         User user = (User) authentication.getPrincipal();
+
+        String token = authUtil.generateAccessToken(user);
+        return new AuthResponse(token, userMapper.toUserProfileResponse(user));
+    }
+
+    @Override
+    public AuthResponse refresh() {
+        Long userId = authUtil.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("User not found"));
 
         String token = authUtil.generateAccessToken(user);
         return new AuthResponse(token, userMapper.toUserProfileResponse(user));
