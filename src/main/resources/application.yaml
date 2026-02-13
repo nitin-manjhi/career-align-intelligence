@@ -29,3 +29,5 @@ logging:
   level:
     org.springframework.ai:
       chat.client: DEBUG
+jwt:
+  secret-key: as9b7aodlbjfkluosfd789ujeklfnlsduf90b8ha908w74tuqijvlckajdl
