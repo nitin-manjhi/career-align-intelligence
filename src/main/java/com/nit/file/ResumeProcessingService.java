@@ -13,8 +13,5 @@ public interface ResumeProcessingService {
      */
     String extractResumeData(final MultipartFile file);
 
-    byte[] generateOnePageResume(UUID uuid);
-
-    byte[] generateCoverLetterPdf(UUID uuid);
 }
 

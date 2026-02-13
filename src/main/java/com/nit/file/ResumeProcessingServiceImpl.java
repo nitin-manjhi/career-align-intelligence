@@ -18,8 +18,6 @@ import java.util.UUID;
 public class ResumeProcessingServiceImpl implements ResumeProcessingService {
 
     private final AnalysisResultRepository analysisResultRepository;
-    private final ResumePdfService resumePdfService;
-    private final CoverLetterPdfService coverLetterPdfService;
 
     @Override
     public String extractResumeData(MultipartFile file) {
@@ -32,44 +30,6 @@ public class ResumeProcessingServiceImpl implements ResumeProcessingService {
             log.info(e.getMessage());
         }
         return content.toString();
-    }
-
-    @Override
-    public byte[] generateOnePageResume(UUID uuid) {
-        AIResponse response = getResumeDetail(uuid);
-        try {
-            return resumePdfService.generateOnePageResume(response);
-        } catch (Exception e) {
-            log.info(e.getMessage());
-        }
-
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] generateCoverLetterPdf(UUID uuid) {
-        AIResponse response = getResumeDetail(uuid);
-        try {
-            return coverLetterPdfService.generateCoverLetterPdf(response);
-        } catch (Exception e) {
-            log.info(e.getMessage());
-        }
-
-        return new byte[0];
-    }
-
-
-    private AIResponse getResumeDetail(UUID uuid) {
-        ObjectMapper mapper = new ObjectMapper();
-        AIResponse response = new AIResponse();
-        AnalysisResultEntity analysisResultEntity = analysisResultRepository.findById(uuid)
-                .orElseThrow(() -> new RuntimeException("Not found"));
-        try {
-            response = mapper.readValue(analysisResultEntity.getAiResponse(), AIResponse.class);
-        } catch (Exception e) {
-            log.info(e.getMessage());
-        }
-        return response;
     }
 
 }

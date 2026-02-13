@@ -24,28 +24,8 @@ public class ResumeExtractionResource {
     private final AtsService atsService;
 
     @PostMapping(path = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<AIResponse> getResume(@Valid @NotNull @RequestPart("file") MultipartFile file, @RequestPart("jdText") String jdText) {
+    public ResponseEntity<AIResponse> analyseResume(@Valid @NotNull @RequestPart("file") MultipartFile file, @RequestPart("jdText") String jdText) {
         return ResponseEntity.ok(atsService.analyzeResume(file, jdText));
-    }
-
-    @GetMapping("/result/{id}/resume-onepage")
-    public ResponseEntity<byte[]> downloadOnePage(@PathVariable UUID id) {
-        byte[] pdf = atsService.downloadOnePageResume(id);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resume.pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
-
-    }
-
-    @GetMapping("/result/{id}/cover-letter")
-    public ResponseEntity<byte[]> downloadCoverLetter(@PathVariable UUID id) {
-        byte[] pdf = atsService.downloadCoverLetterPdf(id);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resume.pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
-
     }
 
 

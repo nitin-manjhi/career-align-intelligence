@@ -12,7 +12,6 @@ public class PromptUtils {
                - missing skills
                - improvement suggestions
             4. Generate:
-               - a ONE-PAGE ATS-optimized resume (truthful, no fake data, bullet points, quantified achievements)
                - a professional 150-200 word cover letter tailored to the role
                - a short recruiter email with subject line
             
@@ -27,7 +26,6 @@ public class PromptUtils {
               "matchedSkills": string[],
               "missingSkills": string[],
               "improvements": string[],
-              "newResume": string,
               "coverLetter": string,
               "email": {
                 "subject": string,

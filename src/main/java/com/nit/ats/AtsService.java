@@ -12,7 +12,4 @@ public interface AtsService {
 
     AIResponse generateReport(String resumeText, String jdText);
 
-    byte[] downloadOnePageResume(UUID uuid);
-
-    byte[] downloadCoverLetterPdf(UUID uuid);
 }

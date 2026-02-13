@@ -34,15 +34,5 @@ public class AtsServiceImpl implements AtsService {
         return aiService.analyzeResume(resumeText, jdText);
     }
 
-    @Override
-    public byte[] downloadOnePageResume(UUID uuid) {
-        return resumeProcessingService.generateOnePageResume(uuid);
-    }
-
-    @Override
-    public byte[] downloadCoverLetterPdf(UUID uuid) {
-        return resumeProcessingService.generateCoverLetterPdf(uuid);
-    }
-
 
 }
