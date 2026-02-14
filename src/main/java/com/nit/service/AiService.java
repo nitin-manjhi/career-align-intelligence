@@ -1,4 +1,4 @@
-package com.nit.llm;
+package com.nit.service;
 
 import com.nit.domain.AIResponse;
 

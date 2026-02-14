@@ -1,9 +1,7 @@
-package com.nit.ats;
+package com.nit.service;
 
 import com.nit.domain.AIResponse;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 public interface AtsService {
     AIResponse analyzeResume(final MultipartFile file, String jdText);

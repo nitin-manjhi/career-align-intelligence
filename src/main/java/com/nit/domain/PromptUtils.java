@@ -1,4 +1,4 @@
-package com.nit.llm;
+package com.nit.domain;
 
 public class PromptUtils {
     public final static String CODE_GENERATION_SYSTEM_PROMPT = """

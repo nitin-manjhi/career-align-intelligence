@@ -1,4 +1,4 @@
-package com.nit.llm;
+package com.nit.domain;
 
 public class PromptResponse {
     public final static String RESPONSE = """

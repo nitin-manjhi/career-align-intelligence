@@ -1,14 +1,10 @@
-package com.nit.ats;
+package com.nit.service;
 
 import com.nit.domain.AIResponse;
-import com.nit.file.ResumeProcessingService;
-import com.nit.llm.AiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
