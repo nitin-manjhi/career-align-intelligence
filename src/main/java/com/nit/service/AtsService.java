@@ -10,4 +10,5 @@ public interface AtsService {
 
     AIResponse generateReport(String resumeText, String jdText);
 
+    void trackGeneration();
 }

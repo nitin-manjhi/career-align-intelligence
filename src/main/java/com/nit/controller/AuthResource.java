@@ -1,6 +1,7 @@
 package com.nit.controller;
 
 import com.nit.dto.auth.AuthResponse;
+import com.nit.dto.auth.ForgotPasswordRequest;
 import com.nit.dto.auth.LoginRequest;
 import com.nit.dto.auth.SignupRequest;
 import com.nit.dto.auth.UserProfileResponse;
@@ -38,6 +39,17 @@ public class AuthResource {
     @GetMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh() {
         return ResponseEntity.ok(authService.refresh());
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getProfile() {
+        return ResponseEntity.ok(userService.getProfile(null));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/logout")

@@ -1,9 +1,10 @@
 package com.nit.security;
 
-
 import com.nit.dto.auth.UserProfileResponse;
 import com.nit.error.ResourceNotFoundException;
+import com.nit.mapper.UserMapper;
 import com.nit.repository.UserRepository;
+import com.nit.security.AuthUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,15 +19,20 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     UserRepository userRepository;
+    AuthUtil authUtil;
+    UserMapper userMapper;
 
     @Override
     public UserProfileResponse getProfile(Long userId) {
-        return null;
+        Long id = (userId == null) ? authUtil.getCurrentUserId() : userId;
+        return userRepository.findById(id)
+                .map(userMapper::toUserProfileResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("User", id.toString()));
     }
-
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User", username));
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
     }
 }
