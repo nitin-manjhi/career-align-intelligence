@@ -33,8 +33,12 @@ public class User implements UserDetails {
     @Column(unique = true)
     String email;
 
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    Integer usageLimit = 10;
+    Role role = Role.USER;
+
+    @Builder.Default
+    Integer usageLimit = 2;
 
     @Builder.Default
     Integer analysisCount = 0;
@@ -52,6 +56,6 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return List.of(() -> "ROLE_" + role.name());
     }
 }

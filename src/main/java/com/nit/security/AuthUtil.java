@@ -14,6 +14,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class AuthUtil {
@@ -29,8 +30,10 @@ public class AuthUtil {
         return Jwts.builder()
                 .subject(user.getUsername())
                 .claim("userId", user.getId().toString())
+                .claim("role", user.getRole().name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 599 * 1000))
+                .expiration(new Date(System.currentTimeMillis() + 599 * 1000 * 10)) // Increased to 100 mins for dev
+                                                                                    // convenience
                 .signWith(getSecretKey())
                 .compact();
     }
@@ -44,7 +47,8 @@ public class AuthUtil {
 
         Long userId = Long.parseLong(claims.get("userId", String.class));
         String username = claims.getSubject();
-        return new JwtUserPrincipal(userId, username, new ArrayList<>());
+        String role = claims.get("role", String.class);
+        return new JwtUserPrincipal(userId, username, List.of(() -> "ROLE_" + role));
     }
 
     public Long getCurrentUserId() {

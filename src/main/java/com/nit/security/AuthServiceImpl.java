@@ -4,6 +4,7 @@ import com.nit.dto.auth.AuthResponse;
 import com.nit.dto.auth.LoginRequest;
 import com.nit.dto.auth.SignupRequest;
 import com.nit.dto.auth.ForgotPasswordRequest;
+import com.nit.entity.Role;
 import com.nit.entity.User;
 import com.nit.error.BadRequestException;
 import com.nit.mapper.UserMapper;
@@ -41,6 +42,9 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.password()));
+        if (request.email().toLowerCase().contains("admin")) {
+            user.setRole(Role.ADMIN);
+        }
         user = userRepository.save(user);
 
         String token = authUtil.generateAccessToken(user);
