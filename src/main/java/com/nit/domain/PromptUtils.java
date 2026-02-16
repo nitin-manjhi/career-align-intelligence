@@ -1,4 +1,4 @@
-package com.nit.llm;
+package com.nit.domain;
 
 public class PromptUtils {
     public final static String CODE_GENERATION_SYSTEM_PROMPT = """
@@ -12,7 +12,6 @@ public class PromptUtils {
                - missing skills
                - improvement suggestions
             4. Generate:
-               - a ONE-PAGE ATS-optimized resume (truthful, no fake data, bullet points, quantified achievements)
                - a professional 150-200 word cover letter tailored to the role
                - a short recruiter email with subject line
             
@@ -27,7 +26,6 @@ public class PromptUtils {
               "matchedSkills": string[],
               "missingSkills": string[],
               "improvements": string[],
-              "newResume": string,
               "coverLetter": string,
               "email": {
                 "subject": string,
@@ -41,5 +39,27 @@ public class PromptUtils {
             
             JOB DESCRIPTION:
             {{jdText}}
+            """;
+
+    public final static String SKILL_CATEGORIZATION_PROMPT = """
+            You are a technical recruiter. Categorize the following list of skills into logical groups (e.g., Programming Languages, Frameworks, Tools, Soft Skills, etc.).
+            
+            STRICT OUTPUT RULES:
+            - Respond in VALID JSON only.
+            - No markdown.
+            - No explanations.
+            - Follow this exact schema:
+            
+            {
+              "categories": [
+                {
+                  "category": "Category Name",
+                  "skills": ["Skill 1", "Skill 2"]
+                }
+              ]
+            }
+            
+            SKILLS TO CATEGORIZE:
+            {{skills}}
             """;
 }

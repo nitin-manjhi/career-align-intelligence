@@ -1,4 +1,4 @@
-package com.nit.file;
+package com.nit.service;
 
 import org.springframework.stereotype.Service;
 

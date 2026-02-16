@@ -1,9 +1,7 @@
-package com.nit.ats;
+package com.nit.service;
 
 import com.nit.domain.AIResponse;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 public interface AtsService {
     AIResponse analyzeResume(final MultipartFile file, String jdText);
@@ -12,7 +10,7 @@ public interface AtsService {
 
     AIResponse generateReport(String resumeText, String jdText);
 
-    byte[] downloadOnePageResume(UUID uuid);
+    void trackGeneration();
 
-    byte[] downloadCoverLetterPdf(UUID uuid);
+    String categorizeSkills(java.util.List<String> skills);
 }

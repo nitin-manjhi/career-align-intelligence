@@ -1,6 +1,8 @@
-package com.nit.llm;
+package com.nit.service;
 
 import com.nit.domain.AIResponse;
+import com.nit.domain.PromptResponse;
+import com.nit.domain.PromptUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -24,5 +26,17 @@ public class AiServiceImpl implements AiService {
                 .call()
                 .content();
         return resultSaveService.saveResult(resumeText, jdText, chat);
+    }
+
+    @Override
+    public String categorizeSkills(java.util.List<String> skills) {
+        String userPrompt = PromptUtils.SKILL_CATEGORIZATION_PROMPT
+                .replace("{{skills}}", String.join(", ", skills));
+
+        return chatClient
+                .prompt()
+                .user(userPrompt)
+                .call()
+                .content();
     }
 }
