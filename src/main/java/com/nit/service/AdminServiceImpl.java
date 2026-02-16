@@ -2,11 +2,15 @@ package com.nit.service;
 
 import com.nit.entity.User;
 import com.nit.entity.UpgradeRequest;
+import com.nit.entity.Role;
 import com.nit.dto.UpgradeRequestResponse;
+import com.nit.dto.UserUsageResponse;
+import com.nit.dto.auth.UserProfileResponse;
 import com.nit.error.ResourceNotFoundException;
 import com.nit.repository.UpgradeRequestRepository;
 import com.nit.repository.UserRepository;
 import com.nit.security.AuthUtil;
+import com.nit.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,15 +24,19 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final UpgradeRequestRepository upgradeRequestRepository;
     private final AuthUtil authUtil;
+    private final UserMapper userMapper;
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserProfileResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toUserProfileResponse)
+                .toList();
     }
 
     @Override
     @Transactional
-    public User updateUserUsage(Long userId, Integer analysisCount, Integer generationCount, Integer usageLimit) {
+    public UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount,
+            Integer usageLimit, String role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
@@ -38,8 +46,17 @@ public class AdminServiceImpl implements AdminService {
             user.setGenerationCount(generationCount);
         if (usageLimit != null)
             user.setUsageLimit(usageLimit);
+        if (role != null) {
+            user.setRole(Role.valueOf(role.toUpperCase()));
+        }
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return new UserUsageResponse(
+                savedUser.getId(),
+                savedUser.getAnalysisCount(),
+                savedUser.getGenerationCount(),
+                savedUser.getUsageLimit(),
+                savedUser.getRole().name());
     }
 
     @Override

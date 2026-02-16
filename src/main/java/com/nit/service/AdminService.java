@@ -1,13 +1,15 @@
 package com.nit.service;
 
-import com.nit.entity.User;
 import com.nit.dto.UpgradeRequestResponse;
+import com.nit.dto.UserUsageResponse;
+import com.nit.dto.auth.UserProfileResponse;
 import java.util.List;
 
 public interface AdminService {
-    List<User> getAllUsers();
+    List<UserProfileResponse> getAllUsers();
 
-    User updateUserUsage(Long userId, Integer analysisCount, Integer generationCount, Integer usageLimit);
+    UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount, Integer usageLimit,
+            String role);
 
     List<UpgradeRequestResponse> getPendingUpgradeRequests();
 

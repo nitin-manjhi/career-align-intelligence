@@ -1,6 +1,7 @@
 package com.nit.controller;
 
-import com.nit.entity.User;
+import com.nit.dto.UserUsageResponse;
+import com.nit.dto.auth.UserProfileResponse;
 import com.nit.dto.UpgradeRequestResponse;
 import com.nit.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -19,17 +20,19 @@ public class AdminResource {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());
     }
 
     @PutMapping("/users/{userId}/usage")
-    public ResponseEntity<User> updateUserUsage(
+    public ResponseEntity<UserUsageResponse> updateUserUsage(
             @PathVariable Long userId,
             @RequestParam(required = false) Integer analysisCount,
             @RequestParam(required = false) Integer generationCount,
-            @RequestParam(required = false) Integer usageLimit) {
-        return ResponseEntity.ok(adminService.updateUserUsage(userId, analysisCount, generationCount, usageLimit));
+            @RequestParam(required = false) Integer usageLimit,
+            @RequestParam(required = false) String role) {
+        return ResponseEntity
+                .ok(adminService.updateUserUsage(userId, analysisCount, generationCount, usageLimit, role));
     }
 
     @GetMapping("/upgrade-requests")
