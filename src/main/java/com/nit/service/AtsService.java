@@ -11,4 +11,6 @@ public interface AtsService {
     AIResponse generateReport(String resumeText, String jdText);
 
     void trackGeneration();
+
+    String categorizeSkills(java.util.List<String> skills);
 }

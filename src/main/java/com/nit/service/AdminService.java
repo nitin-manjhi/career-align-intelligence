@@ -11,7 +11,7 @@ public interface AdminService {
 
     List<UpgradeRequestResponse> getPendingUpgradeRequests();
 
-    void processUpgradeRequest(Long requestId, String status);
+    void processUpgradeRequest(Long requestId, String status, Integer newLimit);
 
     void createUpgradeRequest(String reason);
 }

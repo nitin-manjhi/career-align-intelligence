@@ -40,8 +40,9 @@ public class AdminResource {
     @PutMapping("/upgrade-requests/{requestId}")
     public ResponseEntity<Void> processUpgradeRequest(
             @PathVariable Long requestId,
-            @RequestParam String status) {
-        adminService.processUpgradeRequest(requestId, status);
+            @RequestParam String status,
+            @RequestParam(required = false) Integer newLimit) {
+        adminService.processUpgradeRequest(requestId, status, newLimit);
         return ResponseEntity.ok().build();
     }
 

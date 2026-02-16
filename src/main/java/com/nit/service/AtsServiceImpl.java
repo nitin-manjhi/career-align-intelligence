@@ -64,4 +64,9 @@ public class AtsServiceImpl implements AtsService {
         userRepository.save(user);
     }
 
+    @Override
+    public String categorizeSkills(java.util.List<String> skills) {
+        // We can add validation here if needed
+        return aiService.categorizeSkills(skills);
+    }
 }

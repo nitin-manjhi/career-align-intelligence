@@ -40,4 +40,26 @@ public class PromptUtils {
             JOB DESCRIPTION:
             {{jdText}}
             """;
+
+    public final static String SKILL_CATEGORIZATION_PROMPT = """
+            You are a technical recruiter. Categorize the following list of skills into logical groups (e.g., Programming Languages, Frameworks, Tools, Soft Skills, etc.).
+            
+            STRICT OUTPUT RULES:
+            - Respond in VALID JSON only.
+            - No markdown.
+            - No explanations.
+            - Follow this exact schema:
+            
+            {
+              "categories": [
+                {
+                  "category": "Category Name",
+                  "skills": ["Skill 1", "Skill 2"]
+                }
+              ]
+            }
+            
+            SKILLS TO CATEGORIZE:
+            {{skills}}
+            """;
 }

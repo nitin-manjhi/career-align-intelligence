@@ -59,11 +59,18 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     @Transactional
-    public void processUpgradeRequest(Long requestId, String status) {
+    public void processUpgradeRequest(Long requestId, String status, Integer newLimit) {
         UpgradeRequest request = upgradeRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("UpgradeRequest", requestId.toString()));
 
         request.setStatus(UpgradeRequest.RequestStatus.valueOf(status.toUpperCase()));
+
+        if (request.getStatus() == UpgradeRequest.RequestStatus.APPROVED && newLimit != null) {
+            User user = request.getUser();
+            user.setUsageLimit(newLimit);
+            userRepository.save(user);
+        }
+
         upgradeRequestRepository.save(request);
     }
 

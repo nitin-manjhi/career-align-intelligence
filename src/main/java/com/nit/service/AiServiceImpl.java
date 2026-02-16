@@ -2,6 +2,7 @@ package com.nit.service;
 
 import com.nit.domain.AIResponse;
 import com.nit.domain.PromptResponse;
+import com.nit.domain.PromptUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,26 @@ public class AiServiceImpl implements AiService {
     @Override
     public AIResponse analyzeResume(String resumeText, String jdText) {
 
-/*        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
+        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
                 .replace("{{resumeText}}", resumeText)
                 .replace("{{jdText}}", jdText);
         var chat = chatClient
                 .prompt()
                 .user(userPrompt)
                 .call()
-                .content();*/
-        var chat = PromptResponse.RESPONSE;
+                .content();
         return resultSaveService.saveResult(resumeText, jdText, chat);
+    }
+
+    @Override
+    public String categorizeSkills(java.util.List<String> skills) {
+        String userPrompt = PromptUtils.SKILL_CATEGORIZATION_PROMPT
+                .replace("{{skills}}", String.join(", ", skills));
+
+        return chatClient
+                .prompt()
+                .user(userPrompt)
+                .call()
+                .content();
     }
 }

@@ -31,4 +31,10 @@ public class ResumeExtractionResource {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/categorize-skills")
+    public ResponseEntity<String> categorizeSkills(
+            @org.springframework.web.bind.annotation.RequestBody java.util.List<String> skills) {
+        return ResponseEntity.ok(atsService.categorizeSkills(skills));
+    }
+
 }
