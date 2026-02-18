@@ -20,16 +20,9 @@ public class ResultSaveService {
     private final AnalysisResultRepository repository;
     private final ObjectMapper objectMapper;
 
-    public AIResponse saveResult(UUID resultId, String aiJson) {
+    public void saveResult(UUID resultId, String aiJson) {
 
         String cleanedJson = cleanJson(aiJson);
-        AIResponse response;
-        try {
-            response = objectMapper.readValue(cleanedJson, AIResponse.class);
-        } catch (JsonProcessingException e) {
-            throw new ResponseParserException("Failed to parse AI response JSON", e);
-        }
-
         Optional<AnalysisResultEntity> entity = repository.findById(resultId);
         entity.ifPresent(result -> {
             result.setScore(result.getScore());
@@ -38,7 +31,6 @@ public class ResultSaveService {
             repository.save(result);
         });
 
-        return response;
     }
 
     public AIResponse getResult(UUID uuid) {

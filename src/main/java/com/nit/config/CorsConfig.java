@@ -24,6 +24,3 @@ public class CorsConfig {
         };
     }
 }
-
-// BE:  Server -> add cors configuration
-// FE: resume AI
