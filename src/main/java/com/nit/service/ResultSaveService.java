@@ -10,42 +10,56 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ResultSaveService {
 
-
     private final AnalysisResultRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public AIResponse saveResult(String resumeText, String jdText, String aiJson) {
+    public AIResponse saveResult(UUID resultId, String aiJson) {
 
-        ObjectMapper mapper = new ObjectMapper();
         String cleanedJson = cleanJson(aiJson);
         AIResponse response;
         try {
-            response = mapper.readValue(cleanedJson, AIResponse.class);
+            response = objectMapper.readValue(cleanedJson, AIResponse.class);
         } catch (JsonProcessingException e) {
             throw new ResponseParserException("Failed to parse AI response JSON", e);
         }
 
-        AnalysisResultEntity entity = new AnalysisResultEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setResumeText(resumeText);
-        entity.setJdText(jdText);
-        entity.setScore(response.getScore());
-        entity.setAiResponse(cleanedJson);
-        entity.setCreatedAt(LocalDateTime.now());
+        Optional<AnalysisResultEntity> entity = repository.findById(resultId);
+        entity.ifPresent(result -> {
+            result.setScore(result.getScore());
+            result.setAiResponse(cleanedJson);
+            result.setCreatedAt(LocalDateTime.now());
+            repository.save(result);
+        });
 
-        repository.save(entity);
-        response.setUuid(entity.getId());
         return response;
+    }
+
+    public AIResponse getResult(UUID uuid) {
+        AnalysisResultEntity entity = repository.findById(uuid)
+                .orElseThrow(() -> new ResponseParserException("Result not found for UUID: " + uuid));
+
+        if (entity.getAiResponse() == null) {
+            throw new ResponseParserException("Result data is not yet available for UUID: " + uuid);
+        }
+
+        try {
+            return objectMapper.readValue(entity.getAiResponse(), AIResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseParserException("Failed to parse AI response JSON from database", e);
+        }
     }
 
     public String cleanJson(String raw) {
 
-        if (raw == null) return "{}";
+        if (raw == null)
+            return "{}";
 
         // remove markdown fences
         raw = raw.replaceAll("```json", "")

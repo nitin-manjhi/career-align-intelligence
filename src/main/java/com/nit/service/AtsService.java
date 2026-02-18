@@ -8,9 +8,11 @@ public interface AtsService {
 
     String extractResumeData(final MultipartFile file);
 
-    AIResponse generateReport(String resumeText, String jdText);
+    // AIResponse generateReport(String resumeText, String jdText);
 
-    void trackGeneration();
+    void trackSkillsGeneration();
+
+    AIResponse getAnalysisResult(java.util.UUID resultId);
 
     String categorizeSkills(java.util.List<String> skills);
 }

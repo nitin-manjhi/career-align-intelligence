@@ -1,6 +1,5 @@
 package com.nit.service;
 
-import com.nit.repository.AnalysisResultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
@@ -11,8 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 public class ResumeProcessingServiceImpl implements ResumeProcessingService {
-
-    private final AnalysisResultRepository analysisResultRepository;
 
     @Override
     public String extractResumeData(MultipartFile file) {

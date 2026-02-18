@@ -1,6 +1,15 @@
+kafka.topic.analysis-job-topic: RESUME.AI.ANALYSIS_JOB_TOPIC
+kafka.topic.skill-analysis-job-topic: SKILL.AI.ANALYSIS_JOB_TOPIC
 spring:
   application:
     name: career-align-intelligence
+  # kafka configuration for both producer and consumer
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  # AI configuration for Ollama
   ai:
     ollama:
       base-url: https://ollama.com  # Or the specific cloud gateway provided by Ollama
@@ -9,9 +18,10 @@ spring:
           #          model: qwen3-vl:235b-cloud
           #          model: nemotron-3-nano:30b-cloud
           #          model: gemma3:4b-cloud
-                    model: minimax-m2.5:cloud
-#          model: gemma3:12b-cloud
+          model: minimax-m2.5:cloud
+    #          model: gemma3:12b-cloud
 
+    #  DB configuration
   datasource:
     url: jdbc:postgresql://localhost:5432/resumeDb
     username: postgres
@@ -30,6 +40,7 @@ spring:
   sql:
     init:
       mode: never
+  # flyway configuration for database migrations
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -37,11 +48,12 @@ spring:
     baselineVersion: 0
 #    validateOnMigrate: false
 #    repairOnMigrate: true
-
+# AI  Logging configuration for Ollama
 logging:
   level:
     org.springframework.ai:
       chat.client: DEBUG
 jwt:
   secret-key: as9b7aodlbjfkluosfd789ujeklfnlsduf90b8ha908w74tuqijvlckajdl
-
+server:
+  port: 8080

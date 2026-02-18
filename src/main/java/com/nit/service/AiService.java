@@ -1,8 +1,8 @@
 package com.nit.service;
 
-import com.nit.domain.AIResponse;
+import java.util.UUID;
 
 public interface AiService {
-    AIResponse analyzeResume(String resumeText, String jdText);
+    void analyzeResume(String resumeText, String jdText, UUID uuid);
     String categorizeSkills(java.util.List<String> skills);
 }
