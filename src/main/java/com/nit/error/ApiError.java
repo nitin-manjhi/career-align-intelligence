@@ -1,24 +1,18 @@
 package com.nit.error;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.Instant;
-import java.util.List;
+@Getter
+@Builder
+@AllArgsConstructor
+public class ApiError {
 
-public record ApiError(
-        HttpStatus status,
-        String message,
-        Instant timestamp,
-        @JsonInclude(JsonInclude.Include.NON_NULL) List<ApiFieldError> errors
-) {
-    public ApiError(HttpStatus status, String message) {
-        this(status, message, Instant.now(), null);
-    }
-
-    public ApiError(HttpStatus status, String message, List<ApiFieldError> errors) {
-        this(status, message, Instant.now(), errors);
-    }
+    private String error;        // short code
+    private String message;      // human readable
+    private int status;          // HTTP status
+    private Instant timestamp;   // when happened
+    private String path;         // request URI
 }
-
-record ApiFieldError(String field, String message){}

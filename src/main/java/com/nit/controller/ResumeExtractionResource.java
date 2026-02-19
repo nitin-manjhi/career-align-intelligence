@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -38,13 +40,13 @@ public class ResumeExtractionResource {
 
     @PostMapping("/categorize-skills")
     public ResponseEntity<String> categorizeSkills(
-            @RequestBody java.util.List<String> skills) {
+            @RequestBody List<String> skills) {
         return ResponseEntity.ok(atsService.categorizeSkills(skills));
     }
 
     @GetMapping("/analysis-result/{resultId}")
     public ResponseEntity<AIResponse> getAnalysisResult(
-            @PathVariable java.util.UUID resultId) {
+            @PathVariable UUID resultId) {
         return ResponseEntity.ok(atsService.getAnalysisResult(resultId));
     }
 

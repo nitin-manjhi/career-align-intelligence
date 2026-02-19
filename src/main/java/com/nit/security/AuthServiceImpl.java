@@ -6,7 +6,7 @@ import com.nit.dto.auth.SignupRequest;
 import com.nit.dto.auth.ForgotPasswordRequest;
 import com.nit.entity.Role;
 import com.nit.entity.User;
-import com.nit.error.BadRequestException;
+import com.nit.exception.BadRequestException;
 import com.nit.mapper.UserMapper;
 import com.nit.repository.UserRepository;
 import lombok.AccessLevel;

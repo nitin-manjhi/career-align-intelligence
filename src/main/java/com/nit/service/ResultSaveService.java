@@ -9,8 +9,6 @@ import com.nit.repository.AnalysisResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -23,13 +21,12 @@ public class ResultSaveService {
     public void saveResult(UUID resultId, String aiJson) {
 
         String cleanedJson = cleanJson(aiJson);
-        Optional<AnalysisResultEntity> entity = repository.findById(resultId);
-        entity.ifPresent(result -> {
-            result.setScore(result.getScore());
-            result.setAiResponse(cleanedJson);
-            result.setCreatedAt(LocalDateTime.now());
-            repository.save(result);
-        });
+        AIResponse response = parseJson(cleanedJson);
+        AnalysisResultEntity entity = repository.findById(resultId)
+                .orElseThrow(() -> new ResponseParserException("Analysis Information not found for UUID: " + resultId));
+        entity.setScore(response.getScore());
+        entity.setAiResponse(cleanedJson);
+        repository.save(entity);
 
     }
 
@@ -41,10 +38,16 @@ public class ResultSaveService {
             throw new ResponseParserException("Result data is not yet available for UUID: " + uuid);
         }
 
+        AIResponse response = parseJson(entity.getAiResponse());
+        response.setUuid(uuid);
+        return response;
+    }
+
+    private AIResponse parseJson(String json) {
         try {
-            return objectMapper.readValue(entity.getAiResponse(), AIResponse.class);
+            return objectMapper.readValue(json, AIResponse.class);
         } catch (JsonProcessingException e) {
-            throw new ResponseParserException("Failed to parse AI response JSON from database", e);
+            throw new ResponseParserException("Failed to parse AI response JSON", e);
         }
     }
 

@@ -4,7 +4,7 @@ import com.nit.domain.AIResponse;
 import com.nit.entity.AnalysisJob;
 import com.nit.entity.AnalysisResultEntity;
 import com.nit.entity.User;
-import com.nit.error.BadRequestException;
+import com.nit.exception.BadRequestException;
 import com.nit.repository.AnalysisResultRepository;
 import com.nit.repository.UserRepository;
 import com.nit.security.AuthUtil;
