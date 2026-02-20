@@ -13,11 +13,13 @@ public class OllamaConfig {
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ollama.api-key:}")
+    private String ollamaApiKey;
+
     @Bean
     public RestClientCustomizer restClientCustomizer() {
-        String configured = System.getenv("OLLAMA_API_KEY");
         return restClientBuilder -> restClientBuilder
-                .defaultHeader("Authorization", configured)
+                .defaultHeader("Authorization", ollamaApiKey)
                 .messageConverters(converters -> {
                     converters.add(0, new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(
                             objectMapper));

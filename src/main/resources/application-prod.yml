@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5433/resumeDb?options=-c%20timezone=Asia/Kolkata
+    username: postgres
+    password: ${SPRING_DATASOURCE_PASSWORD:Srcem@123}
+  data:
+    redis:
+      host: redis
+      port: 6379
+  kafka:
+    bootstrap-servers: kafka:19092
+
+ollama:
+  api-key: ${OLLAMA_API_KEY:}
+  base-url: ${OLLAMA_BASE_URL:https://ollama.com}
+  model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
+
+logging:
+  level:
+    org.springframework.ai: INFO
