@@ -77,7 +77,11 @@ public class AtsServiceImpl implements AtsService {
 
     @Override
     public String extractResumeData(MultipartFile file) {
-        return resumeProcessingService.extractResumeData(file);
+        String resumeData = resumeProcessingService.extractResumeData(file);
+        if (resumeData != null && resumeData.length() > 10000) {
+            return resumeData.substring(0, 10000);
+        }
+        return resumeData;
     }
 
     @Override

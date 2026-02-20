@@ -19,7 +19,7 @@ public class AIResponse {
     Integer score;
     List<String> matchedSkills;
     List<String> missingSkills;
-    List<String> improvements;
+    List<String> improvementSuggestions;
     String newResume;
     String coverLetter;
     EmailTemplate email;

@@ -39,6 +39,7 @@ public class AnalysisJob {
         @Column(nullable = false, length = 20)
         private JobStatus status;
 
+        @Builder.Default
         @Column(nullable = false)
         private Integer progress = 0;
 
