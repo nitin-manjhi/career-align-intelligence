@@ -5,29 +5,45 @@ This document contains the UML diagrams for the Career Align Intelligence backen
 ## 1. High-Level Design (HLD) - Component Diagram
 
 ```mermaid
-componentDiagram
-    actor Client as "Web Client (Frontend)"
+flowchart TD
+    %% Define Nodes
+    Client["🌐 Web Client (Frontend)"]
     
-    package "Backend Application" {
-        component "API Gateway / Controllers" as Controllers
-        component "Business Logic / Services" as Services
-        component "Async Workers" as Consumers
-    }
+    subgraph Backend_App [Backend Application]
+        direction TB
+        Controllers["🔌 API Gateway / Controllers"]
+        Services["⚙️ Business Logic / Services"]
+        Consumers["👷 Async Workers"]
+    end
 
-    database "PostgreSQL DB" as DB
-    database "Redis Cache" as Redis
-    component "Kafka" as Kafka
-    component "Ollama (AI Model)" as Ollama
+    DB[("🐘 PostgreSQL DB")]
+    Redis[("🚀 Redis Cache")]
+    Kafka["📨 Kafka (Message Broker)"]
+    Ollama["🧠 Ollama (AI Model)"]
 
-    Client --> Controllers : REST API Calls
-    Controllers --> Services : DTOs
-    Services --> DB : CRUD Operations
-    Services --> Redis : Caching / Rate Limiting
-    Services --> Kafka : Publish Job Events
+    %% Define Relationships
+    Client ---|REST API Calls| Controllers
+    Controllers ---|DTOs| Services
+    Services ---|CRUD| DB
+    Services ---|Caching| Redis
+    Services ---|Publish Job| Kafka
     
-    Kafka --> Consumers : Consume Events
-    Consumers --> Ollama : AI Inference
-    Consumers --> DB : Update Analysis Results
+    Kafka ---|Consume Events| Consumers
+    Consumers ---|AI Inference| Ollama
+    Consumers ---|Update Results| DB
+
+    %% Styling
+    style Backend_App fill:#ffffff,stroke:#333,stroke-width:2px,color:#333
+    style Client fill:#d1e9ff,stroke:#005cb2,color:#000
+    style DB fill:#d0f0d0,stroke:#2b7a2b,color:#000
+    style Redis fill:#ffe0b2,stroke:#e65100,color:#000
+    style Kafka fill:#ebccff,stroke:#6a1b9a,color:#000
+    style Ollama fill:#ffccdc,stroke:#ad1457,color:#000
+    
+    %% Internal nodes visibility
+    style Controllers fill:#fff,stroke:#333,color:#000
+    style Services fill:#fff,stroke:#333,color:#000
+    style Consumers fill:#fff,stroke:#333,color:#000
 ```
 
 ## 2. High-Level Class Diagram

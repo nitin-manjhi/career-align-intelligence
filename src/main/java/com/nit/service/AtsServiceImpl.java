@@ -11,6 +11,7 @@ import com.nit.security.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class AtsServiceImpl implements AtsService {
     private final ResultSaveService resultSaveService;
 
     @Override
+    @Transactional
     public AIResponse analyzeResume(MultipartFile file, String jdText) {
         Long userId = authUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
@@ -64,7 +66,6 @@ public class AtsServiceImpl implements AtsService {
         AIResponse response = new AIResponse();
         response.setUuid(job.getId());
         return response;
-
 
     }
 
