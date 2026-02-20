@@ -1,6 +1,5 @@
 package com.nit.service;
 
-import com.nit.domain.PromptResponse;
 import com.nit.domain.PromptUtils;
 import com.nit.util.HashUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,15 +25,14 @@ public class AiServiceImpl implements AiService {
     @Override
     public void analyzeResume(String resumeText, String jdText, UUID analysisId) {
 
-/*        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
+        String userPrompt = PromptUtils.CODE_GENERATION_SYSTEM_PROMPT
                 .replace("{{resumeText}}", resumeText)
                 .replace("{{jdText}}", jdText);
         var chat = chatClient
                 .prompt()
                 .user(userPrompt)
                 .call()
-                .content();*/
-        var chat = PromptResponse.RESPONSE;
+                .content();
         resultSaveService.saveResult(analysisId, chat);
     }
 
