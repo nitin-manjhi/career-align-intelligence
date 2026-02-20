@@ -7,32 +7,28 @@ spring:
   #redis configuration for caching and session management
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
       timeout: 60000
   # kafka configuration for both producer and consumer
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
   # AI configuration for Ollama
   ai:
     ollama:
-      base-url: https://ollama.com  # Or the specific cloud gateway provided by Ollama
+      base-url: ${OLLAMA_BASE_URL:https://ollama.com}
       chat:
         options:
-          #          model: qwen3-vl:235b-cloud
-          #          model: nemotron-3-nano:30b-cloud
-          #          model: gemma3:4b-cloud
-          model: minimax-m2.5:cloud
-    #          model: gemma3:12b-cloud
+          model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
 
     #  DB configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/resumeDb
-    username: postgres
-    password: Srcem@123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/resumeDb?options=-c%20timezone=Asia/Kolkata}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:Srcem@123}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -61,6 +57,8 @@ logging:
     org.springframework.ai:
       chat.client: DEBUG
 jwt:
-  secret-key: as9b7aodlbjfkluosfd789ujeklfnlsduf90b8ha908w74tuqijvlckajdl
+  secret-key: ${JWT_SECRET:as9b7aodlbjfkluosfd789ujeklfnlsduf90b8ha908w74tuqijvlckajdl}
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost,https://spatial-repairs-allow-possible.trycloudflare.com}
 server:
   port: 8080

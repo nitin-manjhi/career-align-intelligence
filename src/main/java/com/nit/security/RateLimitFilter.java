@@ -31,9 +31,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 "/api/categorize-skills",
                 "/api/track-generation",
                 "/api/analysis-result",
-                "/api/locations",
-                "/api/education"
-        );
+                "/api/education");
 
         boolean isRateLimited = rateLimitedPaths.stream()
                 .anyMatch(request.getRequestURI()::contains);
@@ -51,4 +49,3 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
 }
-
