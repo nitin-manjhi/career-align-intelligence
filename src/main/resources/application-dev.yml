@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/resumeDb
     username: postgres
-    password: Srcem@123
+    password: postgres123
   data:
     redis:
       host: localhost

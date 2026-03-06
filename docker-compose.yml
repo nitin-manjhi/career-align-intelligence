@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: resumeDb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Srcem@123
+      POSTGRES_PASSWORD: postgres123
       PGPORT: 5433
       TZ: Asia/Kolkata
       PGTZ: Asia/Kolkata
@@ -96,7 +96,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/resumeDb?options=-c%20timezone=Asia/Kolkata
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-Srcem@123}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       OLLAMA_API_KEY: ${OLLAMA_API_KEY}
