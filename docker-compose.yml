@@ -2,7 +2,7 @@ services:
 
   postgres:
     image: postgres:17
-    container_name: resume-postgres
+    container_name: resume-postgres-db
     environment:
       POSTGRES_DB: resumeDb
       POSTGRES_USER: postgres
