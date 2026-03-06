@@ -1,10 +1,9 @@
 package com.nit.security;
 
 import com.nit.dto.auth.UserProfileResponse;
-import com.nit.error.ResourceNotFoundException;
+import com.nit.exception.ResourceNotFoundException;
 import com.nit.mapper.UserMapper;
 import com.nit.repository.UserRepository;
-import com.nit.security.AuthUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -1,4 +1,4 @@
-package com.nit.error;
+package com.nit.exception;
 
 import lombok.AccessLevel;
 import lombok.Getter;

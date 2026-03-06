@@ -6,7 +6,7 @@ import com.nit.entity.Role;
 import com.nit.dto.UpgradeRequestResponse;
 import com.nit.dto.UserUsageResponse;
 import com.nit.dto.auth.UserProfileResponse;
-import com.nit.error.ResourceNotFoundException;
+import com.nit.exception.ResourceNotFoundException;
 import com.nit.repository.UpgradeRequestRepository;
 import com.nit.repository.UserRepository;
 import com.nit.security.AuthUtil;

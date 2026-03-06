@@ -54,7 +54,7 @@ public class PromptResponse {
                                    "LaunchDarkly",
                                    "Unleash"
                                  ],
-                                 "improvements": [
+                                 "improvementSuggestions": [
                                    "Add specific versions of Java (Java 8+).",
                                    "Highlight Spring Boot and Spring Framework skills.",
                                    "Explicitly mention experience with Microservices architecture.",

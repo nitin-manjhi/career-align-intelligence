@@ -9,43 +9,52 @@ import com.nit.repository.AnalysisResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ResultSaveService {
 
-
     private final AnalysisResultRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public AIResponse saveResult(String resumeText, String jdText, String aiJson) {
+    public void saveResult(UUID resultId, String aiJson) {
 
-        ObjectMapper mapper = new ObjectMapper();
         String cleanedJson = cleanJson(aiJson);
-        AIResponse response;
+        AIResponse response = parseJson(cleanedJson);
+        AnalysisResultEntity entity = repository.findById(resultId)
+                .orElseThrow(() -> new ResponseParserException("Analysis Information not found for UUID: " + resultId));
+        entity.setScore(response.getScore());
+        entity.setAiResponse(cleanedJson);
+        repository.save(entity);
+
+    }
+
+    public AIResponse getResult(UUID uuid) {
+        AnalysisResultEntity entity = repository.findById(uuid)
+                .orElseThrow(() -> new ResponseParserException("Result not found for UUID: " + uuid));
+
+        if (entity.getAiResponse() == null) {
+            throw new ResponseParserException("Result data is not yet available for UUID: " + uuid);
+        }
+
+        AIResponse response = parseJson(entity.getAiResponse());
+        response.setUuid(uuid);
+        return response;
+    }
+
+    private AIResponse parseJson(String json) {
         try {
-            response = mapper.readValue(cleanedJson, AIResponse.class);
+            return objectMapper.readValue(json, AIResponse.class);
         } catch (JsonProcessingException e) {
             throw new ResponseParserException("Failed to parse AI response JSON", e);
         }
-
-        AnalysisResultEntity entity = new AnalysisResultEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setResumeText(resumeText);
-        entity.setJdText(jdText);
-        entity.setScore(response.getScore());
-        entity.setAiResponse(cleanedJson);
-        entity.setCreatedAt(LocalDateTime.now());
-
-        repository.save(entity);
-        response.setUuid(entity.getId());
-        return response;
     }
 
     public String cleanJson(String raw) {
 
-        if (raw == null) return "{}";
+        if (raw == null)
+            return "{}";
 
         // remove markdown fences
         raw = raw.replaceAll("```json", "")
