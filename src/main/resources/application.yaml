@@ -24,6 +24,19 @@ spring:
         options:
           model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
 
+    openai:
+      api-key: ${OPENAI_API_KEY:REQUIRED_FOR_OPENAI}
+      chat:
+        options:
+          model: gpt-4o-mini
+
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
+        chat:
+          options:
+            model: gemini-2.5-flash-lite
+
     #  DB configuration
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/resumeDb}

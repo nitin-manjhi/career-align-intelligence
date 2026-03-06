@@ -28,8 +28,9 @@ public class ResumeExtractionResource {
 
     @PostMapping(path = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AIResponse> analyseResume(@Valid @NotNull @RequestPart("file") MultipartFile file,
-            @RequestPart("jdText") String jdText) {
-        return ResponseEntity.ok(atsService.analyzeResume(file, jdText));
+            @RequestPart("jdText") String jdText,
+            @RequestPart(value = "model", required = false) String model) {
+        return ResponseEntity.ok(atsService.analyzeResume(file, jdText, model));
     }
 
     @PostMapping("/track-generation")

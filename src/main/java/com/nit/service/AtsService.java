@@ -4,7 +4,7 @@ import com.nit.domain.AIResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface AtsService {
-    AIResponse analyzeResume(final MultipartFile file, String jdText);
+    AIResponse analyzeResume(MultipartFile file, String jdText, String model);
 
     String extractResumeData(final MultipartFile file);
 

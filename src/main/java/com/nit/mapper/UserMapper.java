@@ -17,8 +17,12 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "premiumActive", ignore = true)
+    @Mapping(target = "premiumUsageLimit", ignore = true)
+    @Mapping(target = "premiumUsageCount", ignore = true)
     User toEntity(SignupRequest signupRequest);
 
+    @Mapping(target = "premiumActive", expression = "java(user.getRole() == com.nit.entity.Role.ADMIN || user.isPremiumActive())")
     UserProfileResponse toUserProfileResponse(User user);
 
 }

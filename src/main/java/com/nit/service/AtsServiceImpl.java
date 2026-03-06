@@ -32,7 +32,7 @@ public class AtsServiceImpl implements AtsService {
 
     @Override
     @Transactional
-    public AIResponse analyzeResume(MultipartFile file, String jdText) {
+    public AIResponse analyzeResume(MultipartFile file, String jdText, String model) {
         Long userId = authUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
@@ -53,7 +53,7 @@ public class AtsServiceImpl implements AtsService {
         entity.setCreatedAt(LocalDateTime.now());
         AnalysisResultEntity analysisResultEntity = repository.save(entity);
 
-        AnalysisJob job = analysisJobService.createJob(userId, analysisResultEntity.getId());
+        AnalysisJob job = analysisJobService.createJob(userId, analysisResultEntity.getId(), model);
 
         kafkaProducerService.publishJobForResumeAnalysis(job.getId());
 

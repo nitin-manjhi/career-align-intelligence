@@ -15,7 +15,7 @@ public class AnalysisJobService {
 
     private final AnalysisJobRepository jobRepository;
 
-    public AnalysisJob createJob(Long userId, UUID analysisId) {
+    public AnalysisJob createJob(Long userId, UUID analysisId, String model) {
 
         AnalysisJob job = AnalysisJob.builder()
                 .id(UUID.randomUUID())
@@ -23,6 +23,7 @@ public class AnalysisJobService {
                 .status(JobStatus.PENDING)
                 .progress(0)
                 .resultId(analysisId)
+                .model(model)
                 .createdAt(LocalDateTime.now())
                 .build();
 

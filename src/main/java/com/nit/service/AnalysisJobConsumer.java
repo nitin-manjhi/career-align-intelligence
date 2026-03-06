@@ -33,8 +33,9 @@ public class AnalysisJobConsumer {
             updateProgress(job, 10, JobStatus.PROCESSING, null);
 
             // AI processing
-           aiService.analyzeResume(analysisResultEntity.getResumeText(),
-                    analysisResultEntity.getJdText(), analysisResultEntity.getId());
+            aiService.analyzeResume(analysisResultEntity.getResumeText(),
+                    analysisResultEntity.getJdText(), analysisResultEntity.getId(), job.getId(), job.getUserId(),
+                    job.getModel());
 
             updateProgress(job, 100, JobStatus.DONE, LocalDateTime.now());
 

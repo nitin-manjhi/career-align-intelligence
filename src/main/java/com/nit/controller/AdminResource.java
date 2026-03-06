@@ -30,9 +30,13 @@ public class AdminResource {
             @RequestParam(required = false) Integer analysisCount,
             @RequestParam(required = false) Integer generationCount,
             @RequestParam(required = false) Integer usageLimit,
-            @RequestParam(required = false) String role) {
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean premiumActive,
+            @RequestParam(required = false) Integer premiumUsageLimit,
+            @RequestParam(required = false) Integer premiumUsageCount) {
         return ResponseEntity
-                .ok(adminService.updateUserUsage(userId, analysisCount, generationCount, usageLimit, role));
+                .ok(adminService.updateUserUsage(userId, analysisCount, generationCount, usageLimit, role,
+                        premiumActive, premiumUsageLimit, premiumUsageCount));
     }
 
     @GetMapping("/upgrade-requests")

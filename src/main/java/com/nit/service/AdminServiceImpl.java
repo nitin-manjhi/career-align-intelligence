@@ -36,7 +36,8 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount,
-            Integer usageLimit, String role) {
+            Integer usageLimit, String role, Boolean premiumActive, Integer premiumUsageLimit,
+            Integer premiumUsageCount) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
@@ -49,6 +50,15 @@ public class AdminServiceImpl implements AdminService {
         if (role != null) {
             user.setRole(Role.valueOf(role.toUpperCase()));
         }
+        if (premiumActive != null) {
+            user.setPremiumActive(premiumActive);
+        }
+        if (premiumUsageLimit != null) {
+            user.setPremiumUsageLimit(premiumUsageLimit);
+        }
+        if (premiumUsageCount != null) {
+            user.setPremiumUsageCount(premiumUsageCount);
+        }
 
         User savedUser = userRepository.save(user);
         return new UserUsageResponse(
@@ -56,7 +66,10 @@ public class AdminServiceImpl implements AdminService {
                 savedUser.getAnalysisCount(),
                 savedUser.getGenerationCount(),
                 savedUser.getUsageLimit(),
-                savedUser.getRole().name());
+                savedUser.getRole().name(),
+                savedUser.isPremiumActive(),
+                savedUser.getPremiumUsageLimit(),
+                savedUser.getPremiumUsageCount());
     }
 
     @Override

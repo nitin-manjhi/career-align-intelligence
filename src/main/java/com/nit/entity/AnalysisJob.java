@@ -54,4 +54,7 @@ public class AnalysisJob {
 
         @Column(name = "completed_at")
         private LocalDateTime completedAt;
+
+        @Column(name = "model", length = 50)
+        private String model;
 }
