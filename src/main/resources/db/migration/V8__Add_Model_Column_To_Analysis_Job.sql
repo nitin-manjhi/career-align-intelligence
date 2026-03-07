@@ -1,0 +1,1 @@
+ALTER TABLE analysis_job ADD COLUMN model VARCHAR(50);

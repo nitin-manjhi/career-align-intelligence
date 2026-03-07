@@ -47,6 +47,15 @@ public class User implements UserDetails {
     @Builder.Default
     Integer generationCount = 0;
 
+    @Builder.Default
+    boolean premiumActive = false;
+
+    @Builder.Default
+    Integer premiumUsageLimit = 0;
+
+    @Builder.Default
+    Integer premiumUsageCount = 0;
+
     @CreationTimestamp
     Instant createdAt;
 

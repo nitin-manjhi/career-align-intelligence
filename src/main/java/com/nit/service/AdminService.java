@@ -9,7 +9,7 @@ public interface AdminService {
     List<UserProfileResponse> getAllUsers();
 
     UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount, Integer usageLimit,
-            String role);
+            String role, Boolean premiumActive, Integer premiumUsageLimit, Integer premiumUsageCount);
 
     List<UpgradeRequestResponse> getPendingUpgradeRequests();
 
