@@ -1,6 +1,6 @@
 package com.nit.config;
 
-import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
@@ -13,12 +13,12 @@ public class VectorStoreConfig {
 
     @Bean
     @Primary
-    public VectorStore ollamaVectorStore(
-            OllamaEmbeddingModel ollamaEmbeddingModel,
+    public VectorStore primaryVectorStore(
+            EmbeddingModel primaryEmbeddingModel,
             JdbcTemplate jdbcTemplate) {
-        return PgVectorStore.builder(jdbcTemplate, ollamaEmbeddingModel)
+        return PgVectorStore.builder(jdbcTemplate, primaryEmbeddingModel)
                 .dimensions(1024)
-                .vectorTableName("vector_store_ollama")
+                .vectorTableName("vector_store")
                 .initializeSchema(true)
                 .build();
     }

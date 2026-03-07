@@ -36,10 +36,17 @@ spring:
   # Spring AI Standard Configurations
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:REQUIRED_FOR_OPENAI}
+      api-key: ${OPENROUTER_API_KEY:REQUIRED_FOR_OPENROUTER}
+      # Crucial: Redirect to OpenRouter
+      base-url: https://openrouter.ai/api
       chat:
         options:
-          model: gpt-4o-mini
+          # Use OpenRouter model IDs (provider/model-name)
+          model: nvidia/nemotron-3-nano-30b-a3b:free
+      embedding:
+        options:
+          model: nvidia/llama-nemotron-embed-vl-1b-v2:free
+          dimensions: 1024
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
@@ -87,10 +94,10 @@ logging:
       chat.client: DEBUG
 
 jwt:
-  secret-key: ${JWT_SECRET:as9b7aodlbjfkluosfd789ujeklfnlsduf90b8ha908w74tuqijvlckajdl}
+  secret-key: ${JWT_SECRET:}
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost,https://spatial-repairs-allow-possible.trycloudflare.com}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}
 
 server:
   port: 8080

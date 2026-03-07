@@ -23,21 +23,21 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SkillMatchingService {
 
-    private final VectorStore ollamaVectorStore;
+    private final VectorStore vectorStore;
     private final ObjectMapper objectMapper;
     private final PromptLoaderService promptLoaderService;
 
     public SkillMatchingService(
-            @Qualifier("ollamaVectorStore") VectorStore ollamaVectorStore,
+            VectorStore vectorStore,
             ObjectMapper objectMapper,
             PromptLoaderService promptLoaderService) {
-        this.ollamaVectorStore = ollamaVectorStore;
+        this.vectorStore = vectorStore;
         this.objectMapper = objectMapper;
         this.promptLoaderService = promptLoaderService;
     }
 
     private VectorStore getVectorStore(ChatModel chatModel) {
-        return ollamaVectorStore;
+        return vectorStore;
     }
 
     /**

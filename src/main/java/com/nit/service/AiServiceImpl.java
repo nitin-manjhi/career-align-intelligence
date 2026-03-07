@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class AiServiceImpl implements AiService {
 
+    private final ChatModel primaryChatModel; // Added primary model
     private final ChatModel ollamaChatModel;
     private final ChatModel openAiChatModel;
     private final ChatModel googleGenAiChatModel;
@@ -47,6 +48,7 @@ public class AiServiceImpl implements AiService {
     private final SkillMatchingService skillMatchingService;
 
     public AiServiceImpl(
+            ChatModel primaryChatModel, // Inject primary
             @Qualifier("ollamaChatModel") ChatModel ollamaChatModel,
             @Qualifier("openAiChatModel") ChatModel openAiChatModel,
             @Qualifier("googleGenAiChatModel") ChatModel googleGenAiChatModel,
@@ -57,6 +59,7 @@ public class AiServiceImpl implements AiService {
             ObjectMapper objectMapper,
             com.nit.repository.UserRepository userRepository,
             SkillMatchingService skillMatchingService) {
+        this.primaryChatModel = primaryChatModel;
         this.ollamaChatModel = ollamaChatModel;
         this.openAiChatModel = openAiChatModel;
         this.googleGenAiChatModel = googleGenAiChatModel;
@@ -152,12 +155,12 @@ public class AiServiceImpl implements AiService {
 
     private ChatModel selectChatModel(String model, Long userId) {
         if (model == null)
-            return ollamaChatModel;
+            return primaryChatModel;
 
         String modelLower = model.toLowerCase();
 
         // Premium access check
-        if ("openai".equals(modelLower) || "gemini".equals(modelLower)) {
+        if ("openai".equals(modelLower) || "gemini".equals(modelLower) || "openrouter".equals(modelLower)) {
             var user = userRepository.findById(userId).orElse(null);
             if (user == null) {
                 return ollamaChatModel;
@@ -165,7 +168,9 @@ public class AiServiceImpl implements AiService {
 
             // Admins bypass all checks
             if (user.getRole() == Role.ADMIN) {
-                return "openai".equals(modelLower) ? openAiChatModel : googleGenAiChatModel;
+                if ("gemini".equals(modelLower))
+                    return googleGenAiChatModel;
+                return openAiChatModel; // for openai or openrouter
             }
 
             // Check if user is premium AND has remaining usage
@@ -177,7 +182,7 @@ public class AiServiceImpl implements AiService {
             }
         }
 
-        if ("openai".equals(modelLower)) {
+        if ("openai".equals(modelLower) || "openrouter".equals(modelLower)) {
             return openAiChatModel;
         }
         if ("gemini".equals(modelLower)) {
