@@ -44,6 +44,8 @@ public class AiServiceImpl implements AiService {
     private static final String CACHE_PREFIX_SKILLS = "categorizeSkills:";
     private static final Duration TTL = Duration.ofHours(1);
 
+    private final SkillMatchingService skillMatchingService;
+
     public AiServiceImpl(
             @Qualifier("ollamaChatModel") ChatModel ollamaChatModel,
             @Qualifier("openAiChatModel") ChatModel openAiChatModel,
@@ -53,7 +55,8 @@ public class AiServiceImpl implements AiService {
             SimpMessagingTemplate messagingTemplate,
             RedisTemplate<String, Object> redisTemplate,
             ObjectMapper objectMapper,
-            com.nit.repository.UserRepository userRepository) {
+            com.nit.repository.UserRepository userRepository,
+            SkillMatchingService skillMatchingService) {
         this.ollamaChatModel = ollamaChatModel;
         this.openAiChatModel = openAiChatModel;
         this.googleGenAiChatModel = googleGenAiChatModel;
@@ -63,6 +66,7 @@ public class AiServiceImpl implements AiService {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.userRepository = userRepository;
+        this.skillMatchingService = skillMatchingService;
     }
 
     @Override
@@ -85,7 +89,7 @@ public class AiServiceImpl implements AiService {
         // 1. Analysis Step
         notifyProgress(jobId, userId, "Analysis: ⏳ | Docs: ⚪", 10, null);
         long analysisStart = System.currentTimeMillis();
-        var analysis = performAnalysis(chatClient, resumeText, jdText);
+        var analysis = performAnalysis(chatModel, resumeText, jdText, resultId.toString());
         long analysisDuration = System.currentTimeMillis() - analysisStart;
 
         savePartialResult(resultId, analysis);
@@ -189,15 +193,8 @@ public class AiServiceImpl implements AiService {
         // rely on the placeholder check
     }
 
-    private ResumeAnalysisDTO performAnalysis(ChatClient client, String resume, String jd) {
-        var converter = new BeanOutputConverter<>(ResumeAnalysisDTO.class);
-        String prompt = promptLoaderService.loadPrompt("analysis-prompt.st")
-                .replace("{resumeText}", resume)
-                .replace("{jdText}", jd)
-                .replace("{formatInstruction}", converter.getFormat());
-
-        String response = client.prompt().user(prompt).call().content();
-        return converter.convert(response);
+    private ResumeAnalysisDTO performAnalysis(ChatModel selectedChatModel, String resume, String jd, String resultId) {
+        return skillMatchingService.performSkillMatching(resultId, resume, jd, selectedChatModel);
     }
 
     private String generateCoverLetter(ChatClient client, String resume, String jd, ResumeAnalysisDTO analysis) {
@@ -229,7 +226,7 @@ public class AiServiceImpl implements AiService {
         response.setMatchedSkills(analysis.getMatchedSkills());
         response.setMissingSkills(analysis.getMissingSkills());
         response.setImprovementSuggestions(analysis.getImprovementSuggestions());
-        response.setNewResume(analysis.getOptimizedResume());
+        response.setOptimizedResume(analysis.getOptimizedResume());
         persistResult(resultId, response);
     }
 

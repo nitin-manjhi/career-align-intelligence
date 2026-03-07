@@ -10,6 +10,12 @@ JOB_DESCRIPTION:
 CANDIDATE_RESUME:
 {resumeText}
 
+MATCHED_SKILLS:
+{matchedSkills}
+
+MISSING_SKILLS:
+{missingSkills}
+
 OBJECTIVE
 Analyze the resume against the job description and produce an ATS-optimized version that increases keyword relevance, recruiter readability, and ATS ranking while preserving factual accuracy.
 
@@ -34,7 +40,21 @@ Return the analysis in JSON format matching the following structure:
 
 MAPPING RULES:
 - "improvementSuggestions": Fill with 'SECTION 2 — Resume Weakness Analysis' (5-7 bullet points).
-- "optimizedResume": Fill with 'SECTION 3 — ATS Optimized Resume' (Full content: Summary, Tech Skills, Experience, Projects, Education, Certs).
+- "optimizedResume": Fill with 'SECTION 3 — ATS Optimized Resume'. This field MUST be a professional, plain-text resume version (Summary, Experience, Education). Use **ALL CAPS HEADERS** and **bullet points**. For the EXPERIENCE section, list the job title and company on one line and the dates on the same line (if possible with text) for readability.
+- "structuredResume": Fill with a detailed JSON object representing the 'SECTION 3' data. This MUST follow this structure to enable the high-fidelity UI preview:
+  {
+    "fullName": "Candidate Name",
+    "title": "Professional Title (e.g. Senior Java Developer)",
+    "contact": "Email | Phone | Location",
+    "summary": "Full professional summary paragraph",
+    "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5", "Skill 6", "Skill 7", "Skill 8", "Skill 9", "Skill 10", "Skill 11", "Skill 12"],
+    "workExperience": [
+      { "title": "Job Title", "company": "Company Name", "date": "Oct 2021 - Jan 2026", "points": ["Achievement 1", "Achievement 2"] }
+    ],
+    "education": [
+      { "title": "Degree Name", "college": "Institute Name", "date": "2012", "location": "City, State", "points": ["Marks - 78%", "Specialization"] }
+    ]
+  }
 - "matchedSkills": Fill with 'SECTION 4 — ATS Keyword List' (Top 20 extracted keywords).
 - "score": Fill with 'ATS Match Percentage' (integer 0-100).
 - "scoreExplanation": Fill with 'SECTION 5 — ATS Match Score' explanation AND include summary from 'SECTION 1 — Job Description Insights'. **FORMAT STIPULATION**: This field MUST be a strict bulleted list using the "•" character for every single point, separated by new lines. Do not use paragraphs.
