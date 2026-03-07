@@ -17,6 +17,7 @@ import java.util.UUID;
 public class AIResponse {
     UUID uuid;
     Integer score;
+    String scoreExplanation;
     List<String> matchedSkills;
     List<String> missingSkills;
     List<String> improvementSuggestions;

@@ -225,9 +225,11 @@ public class AiServiceImpl implements AiService {
     private void savePartialResult(UUID resultId, ResumeAnalysisDTO analysis) {
         AIResponse response = new AIResponse();
         response.setScore(analysis.getScore());
+        response.setScoreExplanation(analysis.getScoreExplanation());
         response.setMatchedSkills(analysis.getMatchedSkills());
         response.setMissingSkills(analysis.getMissingSkills());
         response.setImprovementSuggestions(analysis.getImprovementSuggestions());
+        response.setNewResume(analysis.getOptimizedResume());
         persistResult(resultId, response);
     }
 
