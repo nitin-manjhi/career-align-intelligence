@@ -6,18 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -26,14 +26,17 @@ public class SkillMatchingService {
     private final VectorStore vectorStore;
     private final ObjectMapper objectMapper;
     private final PromptLoaderService promptLoaderService;
+    private final ExperienceMatchingService experienceMatchingService;
 
     public SkillMatchingService(
             VectorStore vectorStore,
             ObjectMapper objectMapper,
-            PromptLoaderService promptLoaderService) {
+            PromptLoaderService promptLoaderService,
+            ExperienceMatchingService experienceMatchingService) {
         this.vectorStore = vectorStore;
         this.objectMapper = objectMapper;
         this.promptLoaderService = promptLoaderService;
+        this.experienceMatchingService = experienceMatchingService;
     }
 
     private VectorStore getVectorStore(ChatModel chatModel) {
@@ -110,7 +113,7 @@ public class SkillMatchingService {
             String normalizedSkill = normalizeSkill(skill);
             log.debug("Searching for skill: '{}' (normalized: '{}')", skill, normalizedSkill);
 
-            // Search with a slightly more lenient threshold
+            // Search with a slightly more lenient threshold for semantic matching
             SearchRequest request = SearchRequest.builder()
                     .query(normalizedSkill)
                     .topK(3)
@@ -134,10 +137,49 @@ public class SkillMatchingService {
             }
         }
 
-        int score = jdSkills.isEmpty() ? 0 : (matched.size() * 100) / jdSkills.size();
-        log.info("Skill Matching Complete. Final Score: {}% (Matched: {}, Missing: {})", score, matched.size(),
-                missing.size());
-        return generateFinalAnalysis(matched, missing, score, jdText, resumeText, selectedChatModel);
+        // 1. Semantic Matching Score (Existing logic)
+        double semanticScore = jdSkills.isEmpty() ? 0 : (matched.size() * 100.0) / jdSkills.size();
+
+        // 2. Keyword Matching Score (Exact string matches)
+        double keywordScore = calculateKeywordScore(resumeText, jdSkills);
+
+        // 3. Experience Matching Score (New module)
+        ExperienceMatchingService.ExperienceResult expResult = experienceMatchingService.computeExperience(resumeText,
+                jdSkills);
+
+        // 4. Hybrid ATS Scoring Formula:
+        // ATS_SCORE = 0.40 * keywordScore + 0.40 * semanticScore + 0.20 *
+        // experienceScore
+        int finalAtsScore = (int) Math.round(
+                (0.40 * keywordScore) +
+                        (0.40 * semanticScore) +
+                        (0.20 * expResult.getExperienceScore()));
+
+        log.info("ATS Scoring Summary [Keyword: {}%, Semantic: {}%, Experience: {}%] -> Final: {}%",
+                Math.round(keywordScore), Math.round(semanticScore), expResult.getExperienceScore(), finalAtsScore);
+
+        // Generate final analysis using LLM
+        ResumeAnalysisDTO analysis = generateFinalAnalysis(matched, missing, finalAtsScore, jdText, resumeText,
+                selectedChatModel);
+
+        // Overwrite/Set calculated score components in DTO
+        analysis.setScore(finalAtsScore);
+        analysis.setKeywordScore(keywordScore);
+        analysis.setSemanticScore(semanticScore);
+        analysis.setExperienceScore((int) expResult.getExperienceScore());
+        analysis.setSkillExperience(expResult.getSkillExperience());
+
+        return analysis;
+    }
+
+    private double calculateKeywordScore(String resumeText, List<String> jdSkills) {
+        if (resumeText == null || jdSkills == null || jdSkills.isEmpty())
+            return 0;
+        String lowerResume = resumeText.toLowerCase();
+        long exactMatches = jdSkills.stream()
+                .filter(skill -> lowerResume.contains(skill.toLowerCase()))
+                .count();
+        return (exactMatches * 100.0) / jdSkills.size();
     }
 
     private String normalizeSkill(String skill) {

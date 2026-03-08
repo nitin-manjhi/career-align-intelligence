@@ -159,29 +159,6 @@ public class AiServiceImpl implements AiService {
 
         String modelLower = model.toLowerCase();
 
-        // Premium access check
-        if ("openai".equals(modelLower) || "gemini".equals(modelLower) || "openrouter".equals(modelLower)) {
-            var user = userRepository.findById(userId).orElse(null);
-            if (user == null) {
-                return ollamaChatModel;
-            }
-
-            // Admins bypass all checks
-            if (user.getRole() == Role.ADMIN) {
-                if ("gemini".equals(modelLower))
-                    return googleGenAiChatModel;
-                return openAiChatModel; // for openai or openrouter
-            }
-
-            // Check if user is premium AND has remaining usage
-            if (!user.isPremiumActive() || user.getPremiumUsageCount() >= user.getPremiumUsageLimit()) {
-                log.warn(
-                        "User {} (Role: {}) attempted to use premium model {} but limit reached or not active. Falling back to Ollama",
-                        userId, user.getRole(), model);
-                return ollamaChatModel;
-            }
-        }
-
         if ("openai".equals(modelLower) || "openrouter".equals(modelLower)) {
             return openAiChatModel;
         }
@@ -232,6 +209,16 @@ public class AiServiceImpl implements AiService {
         response.setMissingSkills(analysis.getMissingSkills());
         response.setImprovementSuggestions(analysis.getImprovementSuggestions());
         response.setOptimizedResume(analysis.getOptimizedResume());
+
+        // Hybrid ATS scoring and Experience components
+        response.setSkillExperience(analysis.getSkillExperience());
+        response.setExperienceScore(analysis.getExperienceScore());
+        response.setKeywordScore(analysis.getKeywordScore());
+        response.setSemanticScore(analysis.getSemanticScore());
+
+        // Structured Layout for UI rendering
+        response.setStructuredResume(analysis.getStructuredResume());
+
         persistResult(resultId, response);
     }
 
