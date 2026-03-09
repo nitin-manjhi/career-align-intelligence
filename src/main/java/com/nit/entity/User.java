@@ -39,7 +39,10 @@ public class User implements UserDetails {
     Role role = Role.USER;
 
     @Builder.Default
-    Integer usageLimit = 2;
+    Integer usageLimit = 2; // For standard analysis
+
+    @Builder.Default
+    Integer generationLimit = 2; // For resume generation
 
     @Builder.Default
     Integer analysisCount = 0;

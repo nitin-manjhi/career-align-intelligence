@@ -37,8 +37,20 @@ public class AtsServiceImpl implements AtsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
-        if (user.getAnalysisCount() >= user.getUsageLimit()) {
-            throw new BadRequestException("Analysis limit reached. Please upgrade your plan.");
+        boolean isAdmin = user.getRole() == com.nit.entity.Role.ADMIN;
+        boolean isPremiumModel = model != null && (model.equalsIgnoreCase("openai") || model.equalsIgnoreCase("gemini")
+                || model.equalsIgnoreCase("openrouter"));
+
+        if (!isAdmin) {
+            if (isPremiumModel) {
+                if (!user.isPremiumActive() || user.getPremiumUsageCount() >= user.getPremiumUsageLimit()) {
+                    throw new BadRequestException("Premium analysis quota exceeded. Contact admin for more.");
+                }
+            } else {
+                if (user.getAnalysisCount() >= user.getUsageLimit()) {
+                    throw new BadRequestException("Standard analysis limit reached. Please upgrade your plan.");
+                }
+            }
         }
 
         String resumeText = extractResumeData(file);
@@ -57,9 +69,7 @@ public class AtsServiceImpl implements AtsService {
 
         kafkaProducerService.publishJobForResumeAnalysis(job.getId());
 
-        // Increment analysis count
-        user.setAnalysisCount(user.getAnalysisCount() + 1);
-        userRepository.save(user);
+        // Increment of usage handled in AiServiceImpl after successful analysis
 
         // return job.getId() or some placeholder response since actual analysis will be
         // done asynchronously
@@ -90,7 +100,13 @@ public class AtsServiceImpl implements AtsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
-        if (user.getGenerationCount() >= user.getUsageLimit()) {
+        if (user.getRole() == com.nit.entity.Role.ADMIN) {
+            user.setGenerationCount(user.getGenerationCount() + 1);
+            userRepository.save(user);
+            return;
+        }
+
+        if (user.getGenerationCount() >= user.getGenerationLimit()) {
             throw new BadRequestException("Generation limit reached. Please upgrade your plan.");
         }
 
