@@ -32,14 +32,7 @@ public class AiConfig {
     @Bean
     @Primary
     public EmbeddingModel primaryEmbeddingModel(
-            @Value("${spring.app.ai.embedding-provider:local}") String embeddingProvider,
-            @Qualifier("ollamaEmbeddingModel") ObjectProvider<EmbeddingModel> ollamaEmbeddingModel,
-            @Qualifier("openAiEmbeddingModel") ObjectProvider<EmbeddingModel> openAiEmbeddingModel) {
-
-        if ("openrouter".equalsIgnoreCase(embeddingProvider) || "openai".equalsIgnoreCase(embeddingProvider)) {
-            return openAiEmbeddingModel.getIfAvailable();
-        }
-        // Default to Ollama
+            @Qualifier("ollamaEmbeddingModel") ObjectProvider<EmbeddingModel> ollamaEmbeddingModel) {
         return ollamaEmbeddingModel.getIfAvailable();
     }
 }

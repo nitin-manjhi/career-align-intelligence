@@ -1,128 +1,75 @@
-# CareerAlign Intelligence
+# CareerAlign Intelligence - Backend
 
-**CareerAlign Intelligence** is an AI-powered resume analysis and generation platform that evaluates a candidate’s resume against a job description, produces an ATS-optimized one-page resume, generates a tailored cover letter, and provides downloadable professional PDFs — all through a clean end-to-end workflow.
-
----
-
-## 🚀 Key Features
-
-* **Resume–JD Matching Engine**
-
-  * Upload resume (PDF/DOCX)
-  * Paste job description
-  * AI calculates ATS compatibility score
-  * Identifies matched and missing skills
-  * Provides improvement suggestions
-
-* **AI Resume & Cover Letter Generation**
-
-  * Generates **truthful, ATS-optimized one-page resume**
-  * Creates **role-specific professional cover letter**
-  * Produces **recruiter-ready email template**
-
-* **Structured AI Output**
-
-  * Deterministic JSON schema for stability
-  * Eliminates fragile text parsing
-  * Enables reliable document rendering
-
-* **Professional PDF Export**
-
-  * Separate downloadable PDFs:
-
-    * Resume
-    * Cover Letter
-  * Clean one-page recruiter-friendly layout
-
-* **Persistent Analysis History**
-
-  * Stores resume text, JD, score, and AI response
-  * PostgreSQL + JSONB for flexible structured storage
-
-* **Minimal Angular UI**
-
-  * Upload → Analyze → Download flow
-  * Real product usability, not just backend APIs
+**CareerAlign Intelligence** is a robust, AI-driven microservice built with Spring Boot 3.5. It powers the resume analysis and generation workflows by orchestrating multiple LLM providers, managing complex asynchronous tasks via WebSockets, and providing a highly accurate ATS evaluation engine.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🚀 Core Features
 
-```
-Resume Upload + JD Input
-        ↓
-Text Extraction (Apache Tika)
-        ↓
-AI Analysis (Spring AI + LLM)
-        ↓
-Structured Resume JSON
-        ↓
-PostgreSQL Persistence (JSONB)
-        ↓
-PDF Rendering (OpenPDF)
-        ↓
-Angular UI for End-to-End Usage
+### 🧠 Multi-LLM Intelligence
+- **Ollama Integration**: Powered by `minimax-m2.5:cloud` for efficient analysis (Standard Intelligence).
+- **OpenAI & OpenRouter Integration**: Powered by `nvidia/nemotron-3-nano-30b-a3b` (Advanced AI Pro).
+- **Google Gemini Integration**: Powered by `gemini-2.5-flash-lite` for high-fidelity analysis (Elite AI Deep).
+
+### 📊 Hybrid ATS Scoring Engine
+- **Keyword Matching**: Precise analysis of technical and soft skills.
+- **Semantic Evaluation**: Goes beyond keyword counting to understand context and intent.
+- **Experience Scoring**: Evaluates the depth and relevance of professional history.
+- **Skill Importance Weighting**: Prioritizes skills based on their significance in the JD (Required vs Optional).
+
+### ⚡ Real-Time Processing
+- **WebSocket Notifications**: Asynchronous processing with live progress updates (Analysis -> Cover Letter -> Email).
+- **Parallel Task Execution**: Faster document generation using Java CompletableFuture.
+
+### 📂 Intelligence & Location APIs
+- **Smart Skill Categorization**: AI-powered grouping of raw skills into professional categories (Languages, Tools, etc.).
+- **Location & Education Services**: Integrated data providers for accurate State/City/College selection.
+
+---
+
+## 🏗️ Architecture & Logic
+
+```mermaid
+graph TD
+    A[Client Request] --> B[Spring Security / OAuth2]
+    B --> C[Analysis Service]
+    C --> D{Model Provider}
+    D -->|Ollama| E[minimax-m2.5]
+    D -->|OpenRouter| F[nemotron-3-nano]
+    D -->|Gemini| G[gemini-2.5-flash-lite]
+    C --> H[WebSocket Progress Updates]
+    C --> I[PostgreSQL + JSONB Store]
+    C --> J[Redis Caching]
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Dependencies
 
-### Backend
-
-* Java 17+
-* Spring Boot 3
-* Spring AI (LLM integration)
-* PostgreSQL + JSONB
-* Apache Tika (resume parsing)
-* OpenPDF (PDF generation)
-* Maven
-
-### Frontend
-
-* Angular
-* TypeScript
-* HTTP Client + Forms
+- **Framework**: Spring Boot 3.5 (Java 21)
+- **AI Orchestration**: Spring AI (OpenAI, Ollama, Google GenAI)
+- **Persistence**: PostgreSQL 16 + JSONB (Flexible storage for AI responses)
+- **Caching**: Redis (For skill categorization and frequent lookups)
+- **Real-time**: Spring WebSocket (STOMP)
+- **Document Processing**:
+  - **Apache Tika**: Multi-format text extraction (PDF, DOCX)
+  - **OpenPDF**: Text-based, ATS-readable PDF generation
+- **Security**: Spring Security + JWT + OAuth2
+- **Infrastructure**: Flyway (Database Migrations), Maven, Docker
 
 ---
 
-## 🎯 Problem Solved
+## 🔧 API Highlights
 
-Manual resume tailoring for every job is:
-
-* Time-consuming
-* Error-prone
-* Inconsistent with ATS expectations
-
-**CareerAlign Intelligence automates this entire workflow** using AI, producing recruiter-ready documents in seconds.
-
----
-
-## 📌 Real-World Value
-
-This project demonstrates:
-
-* End-to-end **AI application architecture**
-* **Structured LLM output design**
-* **Document generation pipelines**
-* **Production-style persistence with JSONB**
-* **Full-stack integration (Spring Boot + Angular)**
-
----
-
-## 🔮 Future Enhancements
-
-* RAG-based career memory using pgvector
-* Advanced resume formatting & templates
-* Public deployment with shareable links
-* Multi-role resume versioning
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/ai/analyze` | POST | Triggers multi-step asynchronous resume analysis. |
+| `/api/ai/categorize` | POST | Uses AI to group skills into professional categories. |
+| `/api/locations/states` | GET | Fetch list of Indian States. |
+| `/api/education/colleges` | GET | Fetch accredited colleges by state. |
 
 ---
 
 ## 👤 Author
-
 **Nitin Manjhi**
-Full-Stack Developer | Java • Spring Boot • Angular • AI Integration
-
----
-
+*Full-Stack & AI Integration Engineer*

@@ -1,8 +1,10 @@
 package com.nit.config;
 
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -14,9 +16,9 @@ public class VectorStoreConfig {
     @Bean
     @Primary
     public VectorStore primaryVectorStore(
-            EmbeddingModel primaryEmbeddingModel,
+            @Qualifier("ollamaEmbeddingModel") EmbeddingModel embeddingModel,
             JdbcTemplate jdbcTemplate) {
-        return PgVectorStore.builder(jdbcTemplate, primaryEmbeddingModel)
+        return PgVectorStore.builder(jdbcTemplate, embeddingModel)
                 .dimensions(1024)
                 .vectorTableName("vector_store")
                 .initializeSchema(true)

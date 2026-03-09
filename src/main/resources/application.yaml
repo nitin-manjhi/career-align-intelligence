@@ -17,7 +17,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-  # AI Provider Logic (Synced with RepoVault pattern)
+  # AI Provider Logic
   app:
     ai:
       chat-provider: cloud
@@ -43,10 +43,6 @@ spring:
         options:
           # Use OpenRouter model IDs (provider/model-name)
           model: nvidia/nemotron-3-nano-30b-a3b:free
-      embedding:
-        options:
-          model: nvidia/llama-nemotron-embed-vl-1b-v2:free
-          dimensions: 1024
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}

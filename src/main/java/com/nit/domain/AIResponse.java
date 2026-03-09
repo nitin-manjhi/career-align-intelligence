@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -26,4 +27,15 @@ public class AIResponse {
     String optimizedResume;
     String coverLetter;
     EmailTemplate email;
+
+    // Experience Matching fields
+    private Map<String, Integer> skillExperience;
+    private Integer experienceScore;
+
+    // Hybrid Scoring components
+    private Double keywordScore;
+    private Double semanticScore;
+
+    // Structured data for UI rendering
+    private Object structuredResume;
 }
