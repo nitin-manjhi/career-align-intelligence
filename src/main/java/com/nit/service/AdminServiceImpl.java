@@ -25,6 +25,15 @@ public class AdminServiceImpl implements AdminService {
     private final UpgradeRequestRepository upgradeRequestRepository;
     private final AuthUtil authUtil;
     private final UserMapper userMapper;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
+    private void notifyQuotaUpdate(Long userId, String message) {
+        String destination = "/topic/notifications-" + userId;
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("type", "QUOTA_UPDATE");
+        payload.put("message", message);
+        messagingTemplate.convertAndSend(destination, payload);
+    }
 
     @Override
     public List<UserProfileResponse> getAllUsers() {
@@ -36,7 +45,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount,
-            Integer usageLimit, String role, Boolean premiumActive, Integer premiumUsageLimit,
+            Integer usageLimit, Integer generationLimit, String role, Boolean premiumActive, Integer premiumUsageLimit,
             Integer premiumUsageCount) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
@@ -47,6 +56,8 @@ public class AdminServiceImpl implements AdminService {
             user.setGenerationCount(generationCount);
         if (usageLimit != null)
             user.setUsageLimit(usageLimit);
+        if (generationLimit != null)
+            user.setGenerationLimit(generationLimit);
         if (role != null) {
             user.setRole(Role.valueOf(role.toUpperCase()));
         }
@@ -61,11 +72,16 @@ public class AdminServiceImpl implements AdminService {
         }
 
         User savedUser = userRepository.save(user);
+
+        // Notify user about update via WebSocket
+        notifyQuotaUpdate(savedUser.getId(), "Your usage limit or premium status has been updated.");
+
         return new UserUsageResponse(
                 savedUser.getId(),
                 savedUser.getAnalysisCount(),
                 savedUser.getGenerationCount(),
                 savedUser.getUsageLimit(),
+                savedUser.getGenerationLimit(),
                 savedUser.getRole().name(),
                 savedUser.isPremiumActive(),
                 savedUser.getPremiumUsageLimit(),
@@ -99,6 +115,9 @@ public class AdminServiceImpl implements AdminService {
             User user = request.getUser();
             user.setUsageLimit(newLimit);
             userRepository.save(user);
+            notifyQuotaUpdate(user.getId(), "Your upgrade request has been approved!");
+        } else if (request.getStatus() == UpgradeRequest.RequestStatus.REJECTED) {
+            notifyQuotaUpdate(request.getUser().getId(), "Your upgrade request was reviewed by an admin.");
         }
 
         upgradeRequestRepository.save(request);

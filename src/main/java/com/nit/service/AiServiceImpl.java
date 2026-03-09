@@ -78,15 +78,6 @@ public class AiServiceImpl implements AiService {
         long startTime = System.currentTimeMillis();
         ChatModel chatModel = selectChatModel(model, userId);
 
-        // Handle premium usage increment if cloud model was yielded
-        if (chatModel != ollamaChatModel) {
-            userRepository.findById(userId).ifPresent(user -> {
-                user.setPremiumUsageCount(user.getPremiumUsageCount() + 1);
-                userRepository.save(user);
-                log.info("Incremented premium usage for user {}. New count: {}", userId, user.getPremiumUsageCount());
-            });
-        }
-
         ChatClient chatClient = ChatClient.builder(chatModel).build();
 
         // 1. Analysis Step
@@ -94,6 +85,18 @@ public class AiServiceImpl implements AiService {
         long analysisStart = System.currentTimeMillis();
         var analysis = performAnalysis(chatModel, resumeText, jdText, resultId.toString());
         long analysisDuration = System.currentTimeMillis() - analysisStart;
+
+        // Increment usage after successful Step 1 (Heavy AI work done)
+        userRepository.findById(userId).ifPresent(user -> {
+            if (chatModel != ollamaChatModel) {
+                user.setPremiumUsageCount(user.getPremiumUsageCount() + 1);
+                log.info("Incremented PREMIUM usage for user {}. Count: {}", userId, user.getPremiumUsageCount());
+            } else {
+                user.setAnalysisCount(user.getAnalysisCount() + 1);
+                log.info("Incremented STANDARD usage for user {}. Count: {}", userId, user.getAnalysisCount());
+            }
+            userRepository.save(user);
+        });
 
         savePartialResult(resultId, analysis);
         notifyProgress(jobId, userId, "Analysis: ✅ | Docs: ⏳", 40, resultId);
