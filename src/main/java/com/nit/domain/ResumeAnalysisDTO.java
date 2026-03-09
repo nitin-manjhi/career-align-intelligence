@@ -20,6 +20,8 @@ public class ResumeAnalysisDTO {
     // Hybrid Scoring components
     private Double keywordScore;
     private Double semanticScore;
+    private Double weightedSkillScore;
+    private Map<String, String> skillImportance;
 
     // Structured data for UI rendering
     private Object structuredResume;

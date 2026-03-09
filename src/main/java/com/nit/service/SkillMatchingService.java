@@ -28,15 +28,19 @@ public class SkillMatchingService {
     private final PromptLoaderService promptLoaderService;
     private final ExperienceMatchingService experienceMatchingService;
 
+    private final SkillWeightingService skillWeightingService;
+
     public SkillMatchingService(
             VectorStore vectorStore,
             ObjectMapper objectMapper,
             PromptLoaderService promptLoaderService,
-            ExperienceMatchingService experienceMatchingService) {
+            ExperienceMatchingService experienceMatchingService,
+            SkillWeightingService skillWeightingService) {
         this.vectorStore = vectorStore;
         this.objectMapper = objectMapper;
         this.promptLoaderService = promptLoaderService;
         this.experienceMatchingService = experienceMatchingService;
+        this.skillWeightingService = skillWeightingService;
     }
 
     private VectorStore getVectorStore(ChatModel chatModel) {
@@ -147,16 +151,21 @@ public class SkillMatchingService {
         ExperienceMatchingService.ExperienceResult expResult = experienceMatchingService.computeExperience(resumeText,
                 jdSkills);
 
-        // 4. Hybrid ATS Scoring Formula:
-        // ATS_SCORE = 0.40 * keywordScore + 0.40 * semanticScore + 0.20 *
+        // 5. Skill Importance Weighting (New module)
+        SkillWeightingService.WeightingResult weightingResult = skillWeightingService.calculateWeightedScore(jdText,
+                jdSkills, matched);
+
+        // 6. Hybrid ATS Scoring Formula (Updated):
+        // ATS_SCORE = 0.40 * weightedSkillScore + 0.40 * semanticScore + 0.20 *
         // experienceScore
         int finalAtsScore = (int) Math.round(
-                (0.40 * keywordScore) +
+                (0.40 * weightingResult.getWeightedSkillScore()) +
                         (0.40 * semanticScore) +
                         (0.20 * expResult.getExperienceScore()));
 
-        log.info("ATS Scoring Summary [Keyword: {}%, Semantic: {}%, Experience: {}%] -> Final: {}%",
-                Math.round(keywordScore), Math.round(semanticScore), expResult.getExperienceScore(), finalAtsScore);
+        log.info("ATS Scoring Summary [Weighted: {}%, Semantic: {}%, Experience: {}%] -> Final: {}%",
+                Math.round(weightingResult.getWeightedSkillScore()), Math.round(semanticScore),
+                expResult.getExperienceScore(), finalAtsScore);
 
         // Generate final analysis using LLM
         ResumeAnalysisDTO analysis = generateFinalAnalysis(matched, missing, finalAtsScore, jdText, resumeText,
@@ -168,6 +177,8 @@ public class SkillMatchingService {
         analysis.setSemanticScore(semanticScore);
         analysis.setExperienceScore((int) expResult.getExperienceScore());
         analysis.setSkillExperience(expResult.getSkillExperience());
+        analysis.setWeightedSkillScore(weightingResult.getWeightedSkillScore());
+        analysis.setSkillImportance(weightingResult.getSkillImportance());
 
         return analysis;
     }
@@ -208,6 +219,8 @@ public class SkillMatchingService {
                   "matchedSkills": ["Skill 1", "Skill 2"],
                   "missingSkills": ["Missing 1", "Missing 2"],
                   "improvementSuggestions": ["Fix 1", "Fix 2"],
+                  "skillImportance": {"SkillName": "REQUIRED|PREFERRED|OPTIONAL"},
+                  "weightedSkillScore": double,
                   "optimizedResume": "PROFESSIONAL_LAYOUT (Header\\n\\nEXPERIENCE\\n• Achievement 1)",
                   "structuredResume": {
                     "fullName": "Name", "title": "Title", "contact": "Phone | Email", "summary": "Full Summary", "skills": ["s1", "s2"], "workExperience": [{"title": "t", "company": "c", "date": "d", "points": ["p1"]}], "education": [{"title": "t", "college": "c", "date": "y", "location": "l"}]
