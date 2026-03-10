@@ -1,1 +1,0 @@
-ALTER TABLE users ADD COLUMN generation_limit INTEGER DEFAULT 2;

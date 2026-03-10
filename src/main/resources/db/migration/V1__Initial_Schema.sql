@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS users (
     usage_limit INTEGER DEFAULT 2,
     analysis_count INTEGER DEFAULT 0,
     generation_count INTEGER DEFAULT 0,
+    premium_active BOOLEAN DEFAULT FALSE,
+    premium_usage_limit INT DEFAULT 0,
+    premium_usage_count INT DEFAULT 0,
+    generation_limit INTEGER DEFAULT 2,
     created_at TIMESTAMP WITHOUT TIME ZONE,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     deleted_at TIMESTAMP WITHOUT TIME ZONE
@@ -41,6 +45,7 @@ CREATE TABLE IF NOT EXISTS analysis_result (
     id UUID PRIMARY KEY,
     resume_text TEXT,
     jd_text TEXT,
+    company_name VARCHAR(255),
     score INTEGER,
     ai_response JSONB,
     created_at TIMESTAMP WITHOUT TIME ZONE
@@ -65,6 +70,8 @@ CREATE TABLE IF NOT EXISTS analysis_job (
     status        VARCHAR(20) NOT NULL, -- PENDING, PROCESSING, DONE, FAILED
     progress      INT DEFAULT 0,        -- 0 → 100
     result_id     UUID,                 -- FK to analysis_result.id
+    model         VARCHAR(50),
+    job_type      VARCHAR(30) DEFAULT 'RESUME_ANALYSIS',
     error_message TEXT,
     created_at    TIMESTAMP   NOT NULL,
     completed_at  TIMESTAMP

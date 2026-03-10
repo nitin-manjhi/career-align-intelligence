@@ -1,7 +1,41 @@
--- Insert colleges data
-INSERT INTO colleges (id, name, state_id) VALUES
+-- Colleges Table
+CREATE TABLE IF NOT EXISTS colleges (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    state_id BIGINT NOT NULL,
+    CONSTRAINT fk_colleges_state_id FOREIGN KEY (state_id) REFERENCES states(id),
+    CONSTRAINT uk_colleges_name_state_id UNIQUE (name, state_id)
+);
+CREATE INDEX IF NOT EXISTS idx_colleges_state_id ON colleges(state_id);
 
--- Andhra Pradesh
+-- Degrees Table
+CREATE TABLE IF NOT EXISTS degrees (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+CREATE INDEX IF NOT EXISTS idx_degrees_name ON degrees(name);
+
+-- Degrees Data
+INSERT INTO degrees (id, name) VALUES
+    (1,'Bachelor of Technology (B.Tech)'),
+    (2,'Bachelor of Engineering (B.E)'),
+    (3,'Bachelor of Science (B.Sc)'),
+    (4,'Bachelor of Computer Applications (BCA)'),
+    (5,'Bachelor of Commerce (B.Com)'),
+    (6,'Bachelor of Arts (B.A)'),
+    (7,'Master of Technology (M.Tech)'),
+    (8,'Master of Engineering (M.E)'),
+    (9,'Master of Science (M.Sc)'),
+    (10,'Master of Computer Applications (MCA)'),
+    (11,'Master of Business Administration (MBA)'),
+    (12,'Master of Commerce (M.Com)'),
+    (13,'Doctor of Philosophy (PhD)'),
+    (14,'Diploma in Engineering'),
+    (15,'Post Graduate Diploma')
+ON CONFLICT (id) DO NOTHING;
+
+-- Colleges Data (Sample snippet, I'll include the full content from V4)
+INSERT INTO colleges (id, name, state_id) VALUES
 (10001,'IIT Tirupati',1),
 (10002,'NIT Andhra Pradesh',1),
 (10003,'Andhra University',1),
@@ -12,8 +46,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (10008,'Vignan University',1),
 (10009,'SRM University AP',1),
 (10010,'Other',1),
-
--- Arunachal Pradesh
 (11001,'NERIST Itanagar',2),
 (11002,'Rajiv Gandhi University',2),
 (11003,'Arunachal University',2),
@@ -24,8 +56,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (11008,'Jawaharlal Nehru College Pasighat',2),
 (11009,'Govt College Bomdila',2),
 (11010,'Other',2),
-
--- Assam
 (12001,'IIT Guwahati',3),
 (12002,'NIT Silchar',3),
 (12003,'Gauhati University',3),
@@ -36,8 +66,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (12008,'Jorhat Engineering College',3),
 (12009,'Assam Engineering College',3),
 (12010,'Other',3),
-
--- Bihar
 (13001,'IIT Patna',4),
 (13002,'NIT Patna',4),
 (13003,'Patna University',4),
@@ -48,8 +76,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (13008,'Bhagalpur College of Engineering',4),
 (13009,'AN College Patna',4),
 (13010,'Other',4),
-
--- Chhattisgarh
 (14001,'NIT Raipur',5),
 (14002,'IIT Bhilai',5),
 (14003,'Pt. Ravishankar Shukla University',5),
@@ -60,8 +86,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (14008,'Amity Raipur',5),
 (14009,'ITM University Raipur',5),
 (14010,'Other',5),
-
--- Goa
 (15001,'BITS Pilani Goa',6),
 (15002,'NIT Goa',6),
 (15003,'Goa University',6),
@@ -72,8 +96,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (15008,'Govt College of Arts Science',6),
 (15009,'Rosary College',6),
 (15010,'Other',6),
-
--- Gujarat
 (16001,'IIT Gandhinagar',7),
 (16002,'NIT Surat',7),
 (16003,'MS University Baroda',7),
@@ -84,8 +106,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (16008,'Nirma University',7),
 (16009,'Charotar University',7),
 (16010,'Other',7),
-
--- Haryana
 (17001,'NIT Kurukshetra',8),
 (17002,'IIT Delhi (NCR reach)',8),
 (17003,'Kurukshetra University',8),
@@ -96,8 +116,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (17008,'GD Goenka University',8),
 (17009,'Manav Rachna University',8),
 (17010,'Other',8),
-
--- Himachal Pradesh
 (18001,'NIT Hamirpur',9),
 (18002,'IIT Mandi',9),
 (18003,'HP University Shimla',9),
@@ -108,8 +126,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (18008,'Govt Engineering College Hamirpur',9),
 (18009,'Abhilashi University',9),
 (18010,'Other',9),
-
--- Jharkhand
 (19001,'IIT Dhanbad',10),
 (19002,'NIT Jamshedpur',10),
 (19003,'BIT Mesra',10),
@@ -120,8 +136,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (19008,'RTC Institute',10),
 (19009,'YBN University',10),
 (19010,'Other',10),
-
--- Karnataka
 (20001,'Indian Institute of Science Bangalore',11),
 (20002,'IIT Dharwad',11),
 (20003,'NIT Surathkal',11),
@@ -132,8 +146,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (20008,'Christ University',11),
 (20009,'Jain University',11),
 (20010,'Other',11),
-
--- Kerala
 (21001,'IIT Palakkad',12),
 (21002,'NIT Calicut',12),
 (21003,'Cochin University',12),
@@ -144,8 +156,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (21008,'TKM College',12),
 (21009,'Rajagiri School of Engineering',12),
 (21010,'Other',12),
-
--- Madhya Pradesh
 (22001,'IIT Indore',13),
 (22002,'IISER Bhopal',13),
 (22003,'MANIT Bhopal',13),
@@ -156,8 +166,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (22008,'LNCT Bhopal',13),
 (22009,'Amity Gwalior',13),
 (22010,'Other',13),
-
--- Maharashtra
 (23001,'IIT Bombay',14),
 (23002,'COEP Pune',14),
 (23003,'VNIT Nagpur',14),
@@ -168,8 +176,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (23008,'Symbiosis Pune',14),
 (23009,'NMIMS Mumbai',14),
 (23010,'Other',14),
-
--- Manipur
 (24001,'NIT Manipur',15),
 (24002,'Manipur University',15),
 (24003,'IIIT Manipur',15),
@@ -180,8 +186,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (24008,'Imphal College',15),
 (24009,'Thoubal College',15),
 (24010,'Other',15),
-
--- Meghalaya
 (25001,'NIT Meghalaya',16),
 (25002,'NEHU Shillong',16),
 (25003,'IIM Shillong',16),
@@ -192,8 +196,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (25008,'Synod College',16),
 (25009,'Williamnagar College',16),
 (25010,'Other',16),
-
--- Mizoram
 (26001,'NIT Mizoram',17),
 (26002,'Mizoram University',17),
 (26003,'Govt Aizawl College',17),
@@ -204,8 +206,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (26008,'Serchhip College',17),
 (26009,'Champhai College',17),
 (26010,'Other',17),
-
--- Nagaland
 (27001,'NIT Nagaland',18),
 (27002,'Nagaland University',18),
 (27003,'Kohima Science College',18),
@@ -216,8 +216,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (27008,'Zunheboto College',18),
 (27009,'Phek Govt College',18),
 (27010,'Other',18),
-
--- Odisha
 (28001,'IIT Bhubaneswar',19),
 (28002,'NIT Rourkela',19),
 (28003,'KIIT University',19),
@@ -228,8 +226,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (28008,'SOA University',19),
 (28009,'Ravenshaw University',19),
 (28010,'Other',19),
-
--- Punjab
 (29001,'IIT Ropar',20),
 (29002,'NIT Jalandhar',20),
 (29003,'Punjab University',20),
@@ -240,8 +236,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (29008,'CGC Landran',20),
 (29009,'Chitkara University',20),
 (29010,'Other',20),
-
--- Rajasthan
 (30001,'IIT Jodhpur',21),
 (30002,'MNIT Jaipur',21),
 (30003,'BITS Pilani',21),
@@ -252,8 +246,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (30008,'CTA Udaipur',21),
 (30009,'SKIT Jaipur',21),
 (30010,'Other',21),
-
--- Sikkim
 (31001,'NIT Sikkim',22),
 (31002,'Sikkim University',22),
 (31003,'SMIT',22),
@@ -264,8 +256,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (31008,'Tadong College',22),
 (31009,'Dentam College',22),
 (31010,'Other',22),
-
--- Tamil Nadu
 (32001,'IIT Madras',23),
 (32002,'NIT Trichy',23),
 (32003,'Anna University',23),
@@ -276,8 +266,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (32008,'SASTRA University',23),
 (32009,'Loyola College',23),
 (32010,'Other',23),
-
--- Telangana
 (33001,'IIT Hyderabad',24),
 (33002,'IIIT Hyderabad',24),
 (33003,'University of Hyderabad',24),
@@ -288,8 +276,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (33008,'MGIT',24),
 (33009,'GRIET',24),
 (33010,'Other',24),
-
--- Tripura
 (34001,'NIT Agartala',25),
 (34002,'Tripura University',25),
 (34003,'ICFAI Tripura',25),
@@ -300,8 +286,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (34008,'Bhavan''s College',25),
 (34009,'Techno India Agartala',25),
 (34010,'Other',25),
-
--- Uttar Pradesh
 (35001,'IIT Kanpur',26),
 (35002,'IIT BHU',26),
 (35003,'IIIT Allahabad',26),
@@ -312,8 +296,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (35008,'Shiv Nadar University',26),
 (35009,'Galgotias University',26),
 (35010,'Other',26),
-
--- Uttarakhand
 (36001,'IIT Roorkee',27),
 (36002,'NIT Uttarakhand',27),
 (36003,'GBPUAT Pantnagar',27),
@@ -324,8 +306,6 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (36008,'HNBGU',27),
 (36009,'Alpine College',27),
 (36010,'Other',27),
-
--- West Bengal
 (37001,'IIT Kharagpur',28),
 (37002,'Jadavpur University',28),
 (37003,'IISER Kolkata',28),
@@ -337,4 +317,3 @@ INSERT INTO colleges (id, name, state_id) VALUES
 (37009,'St Xavier''s College',28),
 (37010,'Other',28)
 ON CONFLICT (id) DO NOTHING;
-

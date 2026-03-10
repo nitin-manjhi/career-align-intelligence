@@ -1,1 +1,0 @@
-ALTER TABLE users ADD COLUMN premium_active BOOLEAN DEFAULT FALSE;
