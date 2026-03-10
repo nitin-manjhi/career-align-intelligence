@@ -30,5 +30,6 @@ public class AnalysisResultEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private String aiResponse;
 
+    private String companyName;
     private LocalDateTime createdAt;
 }

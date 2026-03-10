@@ -30,8 +30,9 @@ public class ResumeExtractionResource {
     @PostMapping(path = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AIResponse> analyseResume(@Valid @NotNull @RequestPart("file") MultipartFile file,
             @RequestPart("jdText") String jdText,
-            @RequestPart(value = "model", required = false) String model) {
-        return ResponseEntity.ok(atsService.analyzeResume(file, jdText, model));
+            @RequestPart(value = "model", required = false) String model,
+            @RequestPart(value = "companyName", required = false) String companyName) {
+        return ResponseEntity.ok(atsService.analyzeResume(file, jdText, model, companyName));
     }
 
     @PostMapping("/track-generation")
@@ -75,6 +76,18 @@ public class ResumeExtractionResource {
             return ResponseEntity.ok(filtered);
         }
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/generate-cover-letter/{resultId}")
+    public ResponseEntity<UUID> generateCoverLetter(@PathVariable UUID resultId,
+            @RequestParam(required = false) String model) {
+        return ResponseEntity.ok(atsService.generateCoverLetter(resultId, model));
+    }
+
+    @PostMapping("/generate-email/{resultId}")
+    public ResponseEntity<UUID> generateEmail(@PathVariable UUID resultId,
+            @RequestParam(required = false) String model) {
+        return ResponseEntity.ok(atsService.generateEmail(resultId, model));
     }
 
 }

@@ -32,10 +32,23 @@ public class AnalysisJobConsumer {
         try {
             updateProgress(job, 10, JobStatus.PROCESSING, null);
 
-            // AI processing
-            aiService.analyzeResume(analysisResultEntity.getResumeText(),
-                    analysisResultEntity.getJdText(), analysisResultEntity.getId(), job.getId(), job.getUserId(),
-                    job.getModel());
+            switch (job.getJobType()) {
+                case RESUME_ANALYSIS:
+                    aiService.analyzeResume(analysisResultEntity.getResumeText(),
+                            analysisResultEntity.getJdText(), analysisResultEntity.getId(), job.getId(),
+                            job.getUserId(),
+                            job.getModel());
+                    break;
+                case COVER_LETTER_GENERATION:
+                    aiService.generateCoverLetter(analysisResultEntity.getId(), job.getModel(), job.getId(),
+                            job.getUserId());
+                    break;
+                case EMAIL_GENERATION:
+                    aiService.generateEmail(analysisResultEntity.getId(), job.getModel(), job.getId(), job.getUserId());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown job type: " + job.getJobType());
+            }
 
             updateProgress(job, 100, JobStatus.DONE, LocalDateTime.now());
 
@@ -49,9 +62,20 @@ public class AnalysisJobConsumer {
         } catch (Exception e) {
             job.setStatus(JobStatus.FAILED);
             job.setErrorMessage(e.getMessage());
+            notifyFailure(job.getUserId(), job.getId(), e.getMessage());
         }
 
         jobRepo.save(job);
+    }
+
+    private void notifyFailure(Long userId, UUID jobId, String error) {
+        String destination = "/topic/notifications-" + userId;
+        var payload = java.util.Map.of(
+                "jobId", jobId,
+                "message", "Error: " + error,
+                "progress", 0,
+                "type", "ERROR");
+        messagingTemplate.convertAndSend(destination, payload);
     }
 
     private void updateProgress(AnalysisJob job, int progress, JobStatus status, LocalDateTime localDateTime) {

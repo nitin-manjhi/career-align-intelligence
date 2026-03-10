@@ -39,6 +39,10 @@ public class AnalysisJob {
         @Column(nullable = false, length = 20)
         private JobStatus status;
 
+        @Enumerated(EnumType.STRING)
+        @Column(name = "job_type", length = 30)
+        private com.nit.dto.JobType jobType;
+
         @Builder.Default
         @Column(nullable = false)
         private Integer progress = 0;

@@ -3,6 +3,7 @@ package com.nit.service;
 import com.nit.domain.AIResponse;
 import com.nit.entity.AnalysisJob;
 import com.nit.entity.AnalysisResultEntity;
+import com.nit.dto.JobType;
 import com.nit.entity.User;
 import com.nit.exception.BadRequestException;
 import com.nit.repository.AnalysisResultRepository;
@@ -32,7 +33,7 @@ public class AtsServiceImpl implements AtsService {
 
     @Override
     @Transactional
-    public AIResponse analyzeResume(MultipartFile file, String jdText, String model) {
+    public AIResponse analyzeResume(MultipartFile file, String jdText, String model, String companyName) {
         Long userId = authUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
@@ -62,10 +63,12 @@ public class AtsServiceImpl implements AtsService {
         entity.setId(UUID.randomUUID());
         entity.setResumeText(resumeText);
         entity.setJdText(jdText);
+        entity.setCompanyName(companyName);
         entity.setCreatedAt(LocalDateTime.now());
         AnalysisResultEntity analysisResultEntity = repository.save(entity);
 
-        AnalysisJob job = analysisJobService.createJob(userId, analysisResultEntity.getId(), model);
+        AnalysisJob job = analysisJobService.createJob(userId, analysisResultEntity.getId(), model,
+                JobType.RESUME_ANALYSIS);
 
         kafkaProducerService.publishJobForResumeAnalysis(job.getId());
 
@@ -119,4 +122,20 @@ public class AtsServiceImpl implements AtsService {
         return resultSaveService.getResult(resultId);
     }
 
+    @Override
+    public java.util.UUID generateCoverLetter(UUID resultId, String model) {
+        Long userId = authUtil.getCurrentUserId();
+        AnalysisJob job = analysisJobService.createJob(userId, resultId, model,
+                JobType.COVER_LETTER_GENERATION);
+        kafkaProducerService.publishJobForResumeAnalysis(job.getId());
+        return job.getId();
+    }
+
+    @Override
+    public java.util.UUID generateEmail(UUID resultId, String model) {
+        Long userId = authUtil.getCurrentUserId();
+        AnalysisJob job = analysisJobService.createJob(userId, resultId, model, JobType.EMAIL_GENERATION);
+        kafkaProducerService.publishJobForResumeAnalysis(job.getId());
+        return job.getId();
+    }
 }
