@@ -23,7 +23,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import com.nit.entity.AnalysisResultEntity;
+import com.nit.repository.AnalysisResultRepository;
 
 @Service
 @Slf4j
@@ -46,6 +47,8 @@ public class AiServiceImpl implements AiService {
     private static final Duration TTL = Duration.ofHours(1);
 
     private final SkillMatchingService skillMatchingService;
+    private final com.nit.security.AuthUtil authUtil;
+    private final AnalysisResultRepository analysisResultRepository;
 
     public AiServiceImpl(
             ChatModel primaryChatModel, // Inject primary
@@ -58,7 +61,9 @@ public class AiServiceImpl implements AiService {
             RedisTemplate<String, Object> redisTemplate,
             ObjectMapper objectMapper,
             com.nit.repository.UserRepository userRepository,
-            SkillMatchingService skillMatchingService) {
+            SkillMatchingService skillMatchingService,
+            com.nit.security.AuthUtil authUtil,
+            AnalysisResultRepository analysisResultRepository) {
         this.primaryChatModel = primaryChatModel;
         this.ollamaChatModel = ollamaChatModel;
         this.openAiChatModel = openAiChatModel;
@@ -70,6 +75,8 @@ public class AiServiceImpl implements AiService {
         this.objectMapper = objectMapper;
         this.userRepository = userRepository;
         this.skillMatchingService = skillMatchingService;
+        this.authUtil = authUtil;
+        this.analysisResultRepository = analysisResultRepository;
     }
 
     @Override
@@ -78,10 +85,7 @@ public class AiServiceImpl implements AiService {
         long startTime = System.currentTimeMillis();
         ChatModel chatModel = selectChatModel(model, userId);
 
-        ChatClient chatClient = ChatClient.builder(chatModel).build();
-
-        // 1. Analysis Step
-        notifyProgress(jobId, userId, "Analysis: ⏳ | Docs: ⚪", 10, null);
+        notifyProgress(jobId, userId, "Analysis: ⏳", 10, null);
         long analysisStart = System.currentTimeMillis();
         var analysis = performAnalysis(chatModel, resumeText, jdText, resultId.toString());
         long analysisDuration = System.currentTimeMillis() - analysisStart;
@@ -99,31 +103,55 @@ public class AiServiceImpl implements AiService {
         });
 
         savePartialResult(resultId, analysis);
-        notifyProgress(jobId, userId, "Analysis: ✅ | Docs: ⏳", 40, resultId);
-
-        // Run Step 2 and 3 in parallel with individual updates
-        long parallelStart = System.currentTimeMillis();
-
-        var coverLetterFuture = CompletableFuture.runAsync(() -> {
-            String cl = generateCoverLetter(chatClient, resumeText, jdText, analysis);
-            updateCoverLetter(resultId, cl);
-            notifyDocProgress(jobId, userId, resultId, "Docs: Cover Letter ✅ | Email: ⏳", 70);
-        });
-
-        var emailFuture = CompletableFuture.runAsync(() -> {
-            EmailTemplate em = generateEmail(chatClient, resumeText, jdText, analysis);
-            updateEmail(resultId, em);
-            notifyDocProgress(jobId, userId, resultId, "Docs: Cover Letter ⏳ | Email: ✅", 85);
-        });
-
-        CompletableFuture.allOf(coverLetterFuture, emailFuture).join();
-        long parallelDuration = System.currentTimeMillis() - parallelStart;
 
         long totalTime = System.currentTimeMillis() - startTime;
-        log.info("Analysis Job {} complete Task by Task. Total Time: {}ms, Analysis: {}ms, DocGen: {}ms.",
-                jobId, totalTime, analysisDuration, parallelDuration);
+        log.info("Analysis Job {} complete. Total Time: {}ms, Analysis: {}ms.",
+                jobId, totalTime, analysisDuration);
 
-        notifyDocProgress(jobId, userId, resultId, "All Tasks: ✅", 100);
+        notifyProgress(jobId, userId, "Analysis: ✅", 100, resultId);
+    }
+
+    @Override
+    public String generateCoverLetter(UUID resultId, String model, UUID jobId, Long userId) {
+        notifyProgress(jobId, userId, "Cover Letter: ⏳", 30, null);
+
+        AnalysisResultEntity entity = analysisResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+
+        ChatModel chatModel = selectChatModel(model, userId);
+        ChatClient chatClient = ChatClient.create(chatModel);
+
+        AIResponse current = resultSaveService.getResult(resultId);
+        ResumeAnalysisDTO analysisDTO = new ResumeAnalysisDTO();
+        analysisDTO.setScore(current.getScore());
+        analysisDTO.setMatchedSkills(current.getMatchedSkills());
+
+        String cl = generateCoverLetter(chatClient, entity.getResumeText(), entity.getJdText(), analysisDTO);
+        updateCoverLetter(resultId, cl);
+
+        notifyProgress(jobId, userId, "Cover Letter: ✅", 100, resultId);
+        return cl;
+    }
+
+    @Override
+    public void generateEmail(UUID resultId, String model, UUID jobId, Long userId) {
+        notifyProgress(jobId, userId, "Email Draft: ⏳", 30, null);
+
+        AnalysisResultEntity entity = analysisResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+
+        ChatModel chatModel = selectChatModel(model, userId);
+        ChatClient chatClient = ChatClient.create(chatModel);
+
+        AIResponse current = resultSaveService.getResult(resultId);
+        ResumeAnalysisDTO analysisDTO = new ResumeAnalysisDTO();
+        analysisDTO.setScore(current.getScore());
+        analysisDTO.setMatchedSkills(current.getMatchedSkills());
+
+        EmailTemplate em = generateEmail(chatClient, entity.getResumeText(), entity.getJdText(), analysisDTO);
+        updateEmail(resultId, em);
+
+        notifyProgress(jobId, userId, "Email Draft: ✅", 100, resultId);
     }
 
     private void updateCoverLetter(UUID resultId, String cl) {
@@ -140,20 +168,6 @@ public class AiServiceImpl implements AiService {
             response.setEmail(em);
             persistResult(resultId, response);
         }
-    }
-
-    private void notifyDocProgress(UUID jobId, Long userId, UUID resultId, String msg, int progress) {
-        AIResponse latest = resultSaveService.getResult(resultId);
-        String finalMsg = "Analysis: ✅ | " + msg;
-        // Special logic: if both are done, show both ✅
-        if (latest.getCoverLetter() != null && latest.getEmail() != null) {
-            finalMsg = "Analysis: ✅ | Documents: ✅";
-        } else if (latest.getCoverLetter() != null) {
-            finalMsg = "Analysis: ✅ | CL: ✅ | Email: ⏳";
-        } else if (latest.getEmail() != null) {
-            finalMsg = "Analysis: ✅ | CL: ⏳ | Email: ✅";
-        }
-        notifyProgress(jobId, userId, finalMsg, progress, resultId);
     }
 
     private ChatModel selectChatModel(String model, Long userId) {
@@ -255,7 +269,7 @@ public class AiServiceImpl implements AiService {
         if (cached != null)
             return cached;
 
-        var chatClient = ChatClient.builder(ollamaChatModel).build();
+        ChatClient chatClient = ChatClient.create(ollamaChatModel);
         var converter = new BeanOutputConverter<>(SkillCategoryResponse.class);
         String userPrompt = promptLoaderService.loadPrompt("skill-categorization-prompt.st")
                 .replace("{skills}", String.join(", ", skills))

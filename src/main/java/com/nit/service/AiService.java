@@ -7,4 +7,8 @@ public interface AiService {
             String model);
 
     String categorizeSkills(java.util.List<String> skills);
+
+    String generateCoverLetter(java.util.UUID resultId, String model, java.util.UUID jobId, Long userId);
+
+    void generateEmail(java.util.UUID resultId, String model, java.util.UUID jobId, Long userId);
 }

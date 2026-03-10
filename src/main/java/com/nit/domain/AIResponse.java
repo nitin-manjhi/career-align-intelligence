@@ -38,4 +38,5 @@ public class AIResponse {
 
     // Structured data for UI rendering
     private Object structuredResume;
+    private String companyName;
 }

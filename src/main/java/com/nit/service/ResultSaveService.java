@@ -40,6 +40,7 @@ public class ResultSaveService {
 
         AIResponse response = parseJson(entity.getAiResponse());
         response.setUuid(uuid);
+        response.setCompanyName(entity.getCompanyName());
         return response;
     }
 
