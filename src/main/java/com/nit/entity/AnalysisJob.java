@@ -61,4 +61,7 @@ public class AnalysisJob {
 
         @Column(name = "model", length = 50)
         private String model;
+
+        @Column(name = "job_data", columnDefinition = "TEXT")
+        private String jobData;
 }
