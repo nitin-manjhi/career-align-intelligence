@@ -6,12 +6,15 @@ import com.nit.domain.AIResponse;
 import com.nit.domain.EmailTemplate;
 import com.nit.domain.ResumeAnalysisDTO;
 import com.nit.domain.SkillCategoryResponse;
-import com.nit.entity.Role;
+import com.nit.entity.AnalysisResultEntity;
+import com.nit.repository.AnalysisResultRepository;
+import com.nit.repository.UserRepository;
 import com.nit.util.HashUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -23,8 +26,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import com.nit.entity.AnalysisResultEntity;
-import com.nit.repository.AnalysisResultRepository;
 
 @Service
 @Slf4j
@@ -38,7 +39,7 @@ public class AiServiceImpl implements AiService {
     private final ResultSaveService resultSaveService;
     private final PromptLoaderService promptLoaderService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final com.nit.repository.UserRepository userRepository;
+    private final UserRepository userRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
@@ -47,27 +48,25 @@ public class AiServiceImpl implements AiService {
     private static final Duration TTL = Duration.ofHours(1);
 
     private final SkillMatchingService skillMatchingService;
-    private final com.nit.security.AuthUtil authUtil;
     private final AnalysisResultRepository analysisResultRepository;
 
     public AiServiceImpl(
             ChatModel primaryChatModel, // Inject primary
             @Qualifier("ollamaChatModel") ChatModel ollamaChatModel,
-            @Qualifier("openAiChatModel") ChatModel openAiChatModel,
-            @Qualifier("googleGenAiChatModel") ChatModel googleGenAiChatModel,
+            @Qualifier("openAiChatModel") ObjectProvider<ChatModel> openAiChatModel,
+            @Qualifier("googleGenAiChatModel") ObjectProvider<ChatModel> googleGenAiChatModel,
             ResultSaveService resultSaveService,
             PromptLoaderService promptLoaderService,
             SimpMessagingTemplate messagingTemplate,
             RedisTemplate<String, Object> redisTemplate,
             ObjectMapper objectMapper,
-            com.nit.repository.UserRepository userRepository,
+            UserRepository userRepository,
             SkillMatchingService skillMatchingService,
-            com.nit.security.AuthUtil authUtil,
             AnalysisResultRepository analysisResultRepository) {
         this.primaryChatModel = primaryChatModel;
         this.ollamaChatModel = ollamaChatModel;
-        this.openAiChatModel = openAiChatModel;
-        this.googleGenAiChatModel = googleGenAiChatModel;
+        this.openAiChatModel = openAiChatModel.getIfAvailable();
+        this.googleGenAiChatModel = googleGenAiChatModel.getIfAvailable();
         this.resultSaveService = resultSaveService;
         this.promptLoaderService = promptLoaderService;
         this.messagingTemplate = messagingTemplate;
@@ -75,7 +74,6 @@ public class AiServiceImpl implements AiService {
         this.objectMapper = objectMapper;
         this.userRepository = userRepository;
         this.skillMatchingService = skillMatchingService;
-        this.authUtil = authUtil;
         this.analysisResultRepository = analysisResultRepository;
     }
 
@@ -177,20 +175,14 @@ public class AiServiceImpl implements AiService {
         String modelLower = model.toLowerCase();
 
         if ("openai".equals(modelLower) || "openrouter".equals(modelLower)) {
-            return openAiChatModel;
+            return openAiChatModel != null ? openAiChatModel : ollamaChatModel;
         }
         if ("gemini".equals(modelLower)) {
-            return googleGenAiChatModel;
+            return googleGenAiChatModel != null ? googleGenAiChatModel : ollamaChatModel;
         }
         return ollamaChatModel;
     }
 
-    private void checkKeyConfigured(String envVar, String property) {
-        // Simple check: if the bean exists but the key is placeholder, it means it's
-        // not actually usable
-        // We can check the environment/properties directly if needed, but for now we
-        // rely on the placeholder check
-    }
 
     private ResumeAnalysisDTO performAnalysis(ChatModel selectedChatModel, String resume, String jd, String resultId) {
         return skillMatchingService.performSkillMatching(resultId, resume, jd, selectedChatModel);
@@ -250,13 +242,13 @@ public class AiServiceImpl implements AiService {
 
     private void notifyProgress(UUID jobId, Long userId, String message, int progress, UUID resultId) {
         String destination = "/topic/notifications-" + userId;
-        Map<String, Object> payload = new java.util.HashMap<>(Map.of(
-                "jobId", jobId,
-                "message", message,
-                "progress", progress,
-                "type", "PROGRESS"));
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("jobId", jobId.toString());
+        payload.put("message", message);
+        payload.put("progress", progress);
+        payload.put("type", progress == 100 ? "SUCCESS" : "PROGRESS");
         if (resultId != null) {
-            payload.put("resultId", resultId);
+            payload.put("resultId", resultId.toString());
         }
         messagingTemplate.convertAndSend(destination, payload);
     }

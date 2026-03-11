@@ -1,9 +1,12 @@
 package com.nit.service;
 
 import com.nit.domain.AIResponse;
+import com.nit.dto.ApplicationStatus;
+import com.nit.dto.JobApplicationDTO;
+import com.nit.dto.JobType;
 import com.nit.entity.AnalysisJob;
 import com.nit.entity.AnalysisResultEntity;
-import com.nit.dto.JobType;
+import com.nit.entity.Role;
 import com.nit.entity.User;
 import com.nit.exception.BadRequestException;
 import com.nit.repository.AnalysisResultRepository;
@@ -30,6 +33,7 @@ public class AtsServiceImpl implements AtsService {
     private final KafkaProducerService kafkaProducerService;
     private final AnalysisResultRepository repository;
     private final ResultSaveService resultSaveService;
+    private final JobApplicationService jobApplicationService;
 
     @Override
     @Transactional
@@ -38,7 +42,7 @@ public class AtsServiceImpl implements AtsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
-        boolean isAdmin = user.getRole() == com.nit.entity.Role.ADMIN;
+        boolean isAdmin = user.getRole() == Role.ADMIN;
         boolean isPremiumModel = model != null && (model.equalsIgnoreCase("openai") || model.equalsIgnoreCase("gemini")
                 || model.equalsIgnoreCase("openrouter"));
 
@@ -66,6 +70,17 @@ public class AtsServiceImpl implements AtsService {
         entity.setCompanyName(companyName);
         entity.setCreatedAt(LocalDateTime.now());
         AnalysisResultEntity analysisResultEntity = repository.save(entity);
+
+        // Automatically add to Job Tracker
+        if (companyName != null && !companyName.trim().isEmpty()) {
+            JobApplicationDTO jobDto = new JobApplicationDTO();
+            jobDto.setCompanyName(companyName);
+            jobDto.setJobDescription(jdText);
+            jobDto.setStatus(ApplicationStatus.INITIALIZED);
+            jobDto.setAnalysisId(analysisResultEntity.getId());
+            jobApplicationService.createApplication(jobDto);
+            log.info("Automatically created Job Tracker record for company: {}", companyName);
+        }
 
         AnalysisJob job = analysisJobService.createJob(userId, analysisResultEntity.getId(), model,
                 JobType.RESUME_ANALYSIS);
@@ -103,7 +118,7 @@ public class AtsServiceImpl implements AtsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
-        if (user.getRole() == com.nit.entity.Role.ADMIN) {
+        if (user.getRole() == Role.ADMIN) {
             user.setGenerationCount(user.getGenerationCount() + 1);
             userRepository.save(user);
             return;

@@ -60,4 +60,7 @@ public class JobApplication {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "analysis_id")
+    private java.util.UUID analysisId;
 }

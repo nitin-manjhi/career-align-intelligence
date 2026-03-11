@@ -29,4 +29,5 @@ public class JobApplicationDTO {
     private LocalDate appliedDate;
     private Instant createdAt;
     private Instant updatedAt;
+    private java.util.UUID analysisId;
 }

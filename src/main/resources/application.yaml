@@ -41,17 +41,27 @@ spring:
       base-url: https://openrouter.ai/api
       chat:
         options:
-          # Use OpenRouter model IDs (provider/model-name)
           model: nvidia/nemotron-3-nano-30b-a3b:free
+      embedding:
+        options:
+          model: nvidia/llama-nemotron-embed-vl-1b-v2:free
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
         chat:
           options:
             model: gemini-2.5-flash-lite
+        embedding:
+          text:
+            options:
+              model: gemini-embedding-2-preview
+              dimensions: 768
+          project-id: none
+          location: none
+          api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
     vectorstore:
       pgvector:
-        dimensions: 1024
+        dimensions: 768 # Use 768 for gemini-embedding-2-preview / text-embedding-004. Use 1024 for Ollama bge-m3.
         distance-type: COSINE_DISTANCE
         index-type: HNSW
         initialize-schema: true

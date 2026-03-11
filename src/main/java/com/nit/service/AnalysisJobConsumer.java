@@ -51,14 +51,6 @@ public class AnalysisJobConsumer {
             }
 
             updateProgress(job, 100, JobStatus.DONE, LocalDateTime.now());
-
-            // Notify user via WebSocket
-            String notificationJson = String.format(
-                    "{\"message\": \"Analysis complete for job: %s\", \"resultId\": \"%s\"}",
-                    jobId, job.getResultId());
-            // Notify user via a direct topic based on their ID
-            String destination = "/topic/notifications-" + job.getUserId();
-            messagingTemplate.convertAndSend(destination, notificationJson);
         } catch (Exception e) {
             job.setStatus(JobStatus.FAILED);
             job.setErrorMessage(e.getMessage());
@@ -71,7 +63,7 @@ public class AnalysisJobConsumer {
     private void notifyFailure(Long userId, UUID jobId, String error) {
         String destination = "/topic/notifications-" + userId;
         var payload = java.util.Map.of(
-                "jobId", jobId,
+                "jobId", jobId.toString(),
                 "message", "Error: " + error,
                 "progress", 0,
                 "type", "ERROR");

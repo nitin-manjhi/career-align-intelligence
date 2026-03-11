@@ -147,6 +147,7 @@ public class JobApplicationService {
         dto.setAppliedDate(application.getAppliedDate());
         dto.setCreatedAt(application.getCreatedAt());
         dto.setUpdatedAt(application.getUpdatedAt());
+        dto.setAnalysisId(application.getAnalysisId());
         return dto;
     }
 
@@ -162,6 +163,7 @@ public class JobApplicationService {
                 .resumePath(dto.getResumePath())
                 .closingDate(dto.getClosingDate())
                 .appliedDate(dto.getAppliedDate() != null ? dto.getAppliedDate() : LocalDate.now())
+                .analysisId(dto.getAnalysisId())
                 .build();
     }
 }
