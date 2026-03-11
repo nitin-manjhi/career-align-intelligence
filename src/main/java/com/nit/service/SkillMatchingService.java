@@ -7,7 +7,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.google.genai.GoogleGenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -23,20 +22,25 @@ import java.util.Map;
 @Slf4j
 public class SkillMatchingService {
 
-    private final VectorStore vectorStore;
+    private final VectorStore ollamaVectorStore;
+    private final VectorStore googleVectorStore;
+    private final VectorStore openAiVectorStore;
     private final ObjectMapper objectMapper;
     private final PromptLoaderService promptLoaderService;
     private final ExperienceMatchingService experienceMatchingService;
-
     private final SkillWeightingService skillWeightingService;
 
     public SkillMatchingService(
-            VectorStore vectorStore,
+            @Qualifier("ollamaVectorStore") VectorStore ollamaVectorStore,
+            @Qualifier("googleVectorStore") ObjectProvider<VectorStore> googleVectorStoreProvider,
+            @Qualifier("openAiVectorStore") ObjectProvider<VectorStore> openAiVectorStoreProvider,
             ObjectMapper objectMapper,
             PromptLoaderService promptLoaderService,
             ExperienceMatchingService experienceMatchingService,
             SkillWeightingService skillWeightingService) {
-        this.vectorStore = vectorStore;
+        this.ollamaVectorStore = ollamaVectorStore;
+        this.googleVectorStore = googleVectorStoreProvider.getIfAvailable();
+        this.openAiVectorStore = openAiVectorStoreProvider.getIfAvailable();
         this.objectMapper = objectMapper;
         this.promptLoaderService = promptLoaderService;
         this.experienceMatchingService = experienceMatchingService;
@@ -44,7 +48,25 @@ public class SkillMatchingService {
     }
 
     private VectorStore getVectorStore(ChatModel chatModel) {
-        return vectorStore;
+        String modelName = chatModel.getClass().getSimpleName();
+        boolean isGoogleModel = modelName.contains("Google");
+        boolean isOpenAiModel = modelName.contains("OpenAi");
+
+        log.info("Skill Matching Request - ChatModel: {} (isGoogle: {}, isOpenAi: {})",
+                modelName, isGoogleModel, isOpenAiModel);
+
+        if (isGoogleModel && googleVectorStore != null) {
+            log.info("Selected GOOGLE Vector Store.");
+            return googleVectorStore;
+        }
+
+        if (isOpenAiModel && openAiVectorStore != null) {
+            log.info("Selected OPENAI Vector Store.");
+            return openAiVectorStore;
+        }
+
+        log.info("Selected OLLAMA Vector Store.");
+        return ollamaVectorStore;
     }
 
     /**
@@ -59,13 +81,13 @@ public class SkillMatchingService {
         List<Document> splitDocuments = chunkText(resumeId, resumeText);
 
         // 3. Vectorization (Embedded once per upload logic)
-        embedAndStore(resumeId, splitDocuments, selectedChatModel);
+        VectorStore usedStore = embedAndStore(resumeId, splitDocuments, selectedChatModel);
 
         // 4. Skill Extractor: Get technical skills from JD
         List<String> jdSkills = extractSkillsFromJd(jdText, selectedChatModel);
 
         // 5 & 6. Semantic Matching & Scoring
-        return matchSkillsAndCalculateScore(resumeId, jdSkills, jdText, resumeText, selectedChatModel);
+        return matchSkillsAndCalculateScore(resumeId, jdSkills, jdText, resumeText, selectedChatModel, usedStore);
     }
 
     private List<Document> chunkText(String resumeId, String text) {
@@ -75,13 +97,27 @@ public class SkillMatchingService {
         return splitter.apply(List.of(doc));
     }
 
-    private void embedAndStore(String resumeId, List<Document> documents, ChatModel selectedChatModel) {
+    private VectorStore embedAndStore(String resumeId, List<Document> documents, ChatModel selectedChatModel) {
         VectorStore vectorStore = getVectorStore(selectedChatModel);
         log.info("Generating embeddings and storing {} chunks for resumeId: {} in {}...",
                 documents.size(), resumeId, vectorStore.toString());
         long startTime = System.currentTimeMillis();
-        vectorStore.add(documents);
-        log.info("Successfully stored embeddings in {}ms", System.currentTimeMillis() - startTime);
+        try {
+            vectorStore.add(documents);
+            log.info("Successfully stored embeddings in {}ms", System.currentTimeMillis() - startTime);
+            return vectorStore;
+        } catch (Exception e) {
+            log.warn("💥 Primary embedding failed ({}). Falling back to OLLAMA...", e.getMessage());
+            if (vectorStore != ollamaVectorStore) {
+                long fallbackStart = System.currentTimeMillis();
+                ollamaVectorStore.add(documents);
+                log.info("Successfully stored OLLAMA fallback embeddings in {}ms", System.currentTimeMillis() - fallbackStart);
+                return ollamaVectorStore;
+            } else {
+                log.error("OLLAMA is already the primary store and it failed. Cannot fallback.");
+                throw e;
+            }
+        }
     }
 
     private List<String> extractSkillsFromJd(String jdText, ChatModel selectedChatModel) {
@@ -107,7 +143,7 @@ public class SkillMatchingService {
     }
 
     private ResumeAnalysisDTO matchSkillsAndCalculateScore(String resumeId, List<String> jdSkills, String jdText,
-            String resumeText, ChatModel selectedChatModel) {
+            String resumeText, ChatModel selectedChatModel, VectorStore vectorStore) {
         log.info("Matching {} extracted skills against vector store for resumeId: {}...", jdSkills.size(), resumeId);
 
         List<String> matched = new ArrayList<>();
@@ -126,7 +162,7 @@ public class SkillMatchingService {
                     .build();
 
             try {
-                List<Document> results = getVectorStore(selectedChatModel).similaritySearch(request);
+                List<Document> results = vectorStore.similaritySearch(request);
                 if (!results.isEmpty()) {
                     log.debug("✅ Found match for '{}' with score: {}", skill,
                             results.get(0).getMetadata().get("distance"));

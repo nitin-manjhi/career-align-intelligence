@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class AiConfig {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AiConfig.class);
 
     @Bean
     @Primary
@@ -32,7 +33,26 @@ public class AiConfig {
     @Bean
     @Primary
     public EmbeddingModel primaryEmbeddingModel(
-            @Qualifier("ollamaEmbeddingModel") ObjectProvider<EmbeddingModel> ollamaEmbeddingModel) {
+            @Value("${spring.app.ai.chat-provider:cloud}") String chatProvider,
+            @Value("${spring.app.ai.embedding-provider:local}") String embeddingProvider,
+            @Qualifier("ollamaEmbeddingModel") ObjectProvider<EmbeddingModel> ollamaEmbeddingModel,
+            ObjectProvider<EmbeddingModel> allEmbeddingModels) {
+
+        boolean useGemini = "gemini".equalsIgnoreCase(chatProvider) || "gemini".equalsIgnoreCase(embeddingProvider);
+
+        if (useGemini) {
+            EmbeddingModel model = allEmbeddingModels.stream()
+                    .filter(m -> m.getClass().getName().toLowerCase().contains("googlegenai") || 
+                                m.getClass().getSimpleName().toLowerCase().contains("googlegenai"))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (model == null) {
+                log.warn("Gemini requested but no GoogleGenAiEmbeddingModel bean found! Falling back to Ollama.");
+                return ollamaEmbeddingModel.getIfAvailable();
+            }
+            return model;
+        }
         return ollamaEmbeddingModel.getIfAvailable();
     }
 }
