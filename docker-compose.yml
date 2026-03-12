@@ -127,8 +127,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: '1.00'
+          memory: 768M
+          cpus: '0.75'
     profiles: [ "local", "test", "prod" ]
 
   frontend:

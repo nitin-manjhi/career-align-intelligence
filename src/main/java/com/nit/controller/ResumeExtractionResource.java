@@ -29,10 +29,11 @@ public class ResumeExtractionResource {
 
     @PostMapping(path = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AIResponse> analyseResume(@Valid @NotNull @RequestPart("file") MultipartFile file,
-            @RequestPart("jdText") String jdText,
-            @RequestPart(value = "model", required = false) String model,
-            @RequestPart(value = "companyName", required = false) String companyName) {
-        return ResponseEntity.ok(atsService.analyzeResume(file, jdText, model, companyName));
+            @RequestParam("jdText") String jdText,
+            @RequestParam(value = "model", required = false) String model,
+            @RequestParam(value = "companyName", required = false) String companyName,
+            @RequestParam(value = "applicationId", required = false) Long applicationId) {
+        return ResponseEntity.ok(atsService.analyzeResume(file, jdText, model, companyName, applicationId));
     }
 
     @PostMapping("/track-generation")
@@ -88,6 +89,14 @@ public class ResumeExtractionResource {
     public ResponseEntity<UUID> generateEmail(@PathVariable UUID resultId,
             @RequestParam(required = false) String model) {
         return ResponseEntity.ok(atsService.generateEmail(resultId, model));
+    }
+
+    @PostMapping("/rewrite-summary")
+    public ResponseEntity<String> rewriteSummary(
+            @RequestBody java.util.Map<String, String> request) {
+        String summary = request.get("summary");
+        String model = request.get("model");
+        return ResponseEntity.ok(atsService.rewriteSummary(summary, model));
     }
 
 }

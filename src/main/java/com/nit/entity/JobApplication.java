@@ -28,7 +28,7 @@ public class JobApplication {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-    @Column(name = "job_description", columnDefinition = "TEXT", length = 2000)
+    @Column(name = "job_description", columnDefinition = "TEXT")
     private String jobDescription;
 
     @Enumerated(EnumType.STRING)

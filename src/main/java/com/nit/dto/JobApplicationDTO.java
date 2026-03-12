@@ -15,7 +15,7 @@ public class JobApplicationDTO {
     @NotBlank(message = "Company name is required")
     private String companyName;
 
-    @Size(max = 2000, message = "Job description cannot exceed 2000 characters")
+    @Size(max = 65535, message = "Job description is too long")
     private String jobDescription;
 
     @NotNull(message = "Status is required")

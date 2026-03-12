@@ -4,7 +4,7 @@ import com.nit.domain.AIResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface AtsService {
-    AIResponse analyzeResume(MultipartFile file, String jdText, String model, String companyName);
+    AIResponse analyzeResume(MultipartFile file, String jdText, String model, String companyName, Long applicationId);
 
     String extractResumeData(final MultipartFile file);
 
@@ -19,4 +19,6 @@ public interface AtsService {
     java.util.UUID generateCoverLetter(java.util.UUID resultId, String model);
 
     java.util.UUID generateEmail(java.util.UUID resultId, String model);
+
+    String rewriteSummary(String summary, String model);
 }

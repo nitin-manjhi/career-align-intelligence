@@ -1,72 +1,85 @@
-# CareerAlign Intelligence - Backend
+# CareerAlign Intelligence - Full-Stack AI Ecosystem
 
-**CareerAlign Intelligence** is a robust, AI-driven microservice built with Spring Boot 3.5. It powers the resume analysis and generation workflows by orchestrating multiple LLM providers, managing complex asynchronous tasks via WebSockets, and providing a highly accurate ATS evaluation engine.
+**CareerAlign Intelligence** is a robust, AI-driven platform built with Spring Boot 3.5 and Angular 19. It powers the end-to-end career lifecycle—from AI-powered job searching and resume analysis to manual application tracking and secure data backups.
 
 ---
 
 ## 🚀 Core Features
 
 ### 🧠 Multi-LLM Intelligence
-- **Ollama Integration**: Powered by `minimax-m2.5:cloud` for efficient analysis (Standard Intelligence).
-- **OpenAI & OpenRouter Integration**: Powered by `nvidia/nemotron-3-nano-30b-a3b` (Advanced AI Pro).
-- **Google Gemini Integration**: Powered by `gemini-2.5-flash-lite` for high-fidelity analysis (Elite AI Deep).
+- **Ollama Integration**: Powered by `minimax-m2.5:cloud` for efficient analysis.
+- **Google Gemini Integration**: Native support for Gemini embedding models and text generation (`gemini-2.5-flash-lite`).
+- **Hybrid ATS Scoring**: Semantic evaluation that prioritizes "Required" vs "Optional" skills with custom importance weighting.
 
-### 📊 Hybrid ATS Scoring Engine
-- **Keyword Matching**: Precise analysis of technical and soft skills.
-- **Semantic Evaluation**: Goes beyond keyword counting to understand context and intent.
-- **Experience Scoring**: Evaluates the depth and relevance of professional history.
-- **Skill Importance Weighting**: Prioritizes skills based on their significance in the JD (Required vs Optional).
+### 🔍 LinkedIn Job Finder (NEW)
+- **Real-time Scraping**: Integrated with a Playwright/Puppeteer-based scraper to find live LinkedIn jobs.
+- **Intelligent Detail Fetching**: On-demand scraping of full job descriptions and required skills.
+- **Search Criteria**: Filter by location, experience level (Entry/Mid/Senior), job type (Full-time/Contract), and remote status.
 
-### ⚡ Real-Time Processing
-- **WebSocket Notifications**: Asynchronous processing with live progress updates (Analysis -> Cover Letter -> Email).
-- **Parallel Task Execution**: Faster document generation using Java CompletableFuture.
+### 📋 Job Application Tracker
+- **One-Click Tracking**: Directly add matched LinkedIn jobs to your personal tracker.
+- **Workflow Management**: Manage applications through statuses: `INITIALIZED`, `APPLIED`, `PROCESSING`, `REJECTED`, `SELECTED`.
+- **Resume Linking**: Associate specific resume analyses with individual job applications.
 
-### 📂 Intelligence & Location APIs
-- **Smart Skill Categorization**: AI-powered grouping of raw skills into professional categories (Languages, Tools, etc.).
-- **Location & Education Services**: Integrated data providers for accurate State/City/College selection.
+### 📅 Document & Data Management
+- **Backup & Restore**: Export your entire job tracker history to CSV format for layman-friendly data portability.
+- **Waitlist & PWA**: Fully functional Progressive Web App (PWA) with Android optimization and a managed early-access waitlist.
+- **Resume Generation**: High-fidelity, ATS-readable PDF generation with real-time live previews.
 
 ---
 
-## 🏗️ Architecture & Logic
+## 🏗️ Architecture & Ecosystem
 
 ```mermaid
 graph TD
-    A[Client Request] --> B[Spring Security / OAuth2]
-    B --> C[Analysis Service]
-    C --> D{Model Provider}
-    D -->|Ollama| E[minimax-m2.5]
-    D -->|OpenRouter| F[nemotron-3-nano]
-    D -->|Gemini| G[gemini-2.5-flash-lite]
-    C --> H[WebSocket Progress Updates]
-    C --> I[PostgreSQL + JSONB Store]
-    C --> J[Redis Caching]
+    subgraph "Frontend (Angular 19)"
+        UI[PWA Dashboard]
+        JS[Job Search UI]
+    end
+
+    subgraph "Backend (Spring Boot 3.5)"
+        API[REST & WebSocket Controller]
+        SCH[Analysis Engine]
+        KB[Kafka Event Bus]
+    end
+
+    subgraph "External AI & Data"
+        LLM[Gemini / Ollama / OpenRouter]
+        SCR[LinkedIn Scraper API]
+    end
+
+    UI --> API
+    JS --> API
+    API --> SCH
+    SCH --> LLM
+    API --> KB
+    KB --> SCR
+    SCR --> JS
+    API --> DB[(PostgreSQL + pgvector)]
+    API --> RD[(Redis Cache)]
 ```
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
+## 🛠️ Tech Stack
 
-- **Framework**: Spring Boot 3.5 (Java 21)
-- **AI Orchestration**: Spring AI (OpenAI, Ollama, Google GenAI)
-- **Persistence**: PostgreSQL 16 + JSONB (Flexible storage for AI responses)
-- **Caching**: Redis (For skill categorization and frequent lookups)
-- **Real-time**: Spring WebSocket (STOMP)
-- **Document Processing**:
-  - **Apache Tika**: Multi-format text extraction (PDF, DOCX)
-  - **OpenPDF**: Text-based, ATS-readable PDF generation
-- **Security**: Spring Security + JWT + OAuth2
-- **Infrastructure**: Flyway (Database Migrations), Maven, Docker
+- **Backend**: Java 21, Spring Boot 3.5, Spring AI, Spring Kafka
+- **Frontend**: Angular 19, PrimeNG 19, RxJS, PWA (Service Workers)
+- **Data**: PostgreSQL 16 (pgvector), Redis 7
+- **Infrastructure**: Docker Compose, Kafka (KRaft mode), Flyway
+- **Tools**: Apache Tika (Extraction), OpenPDF (Generation)
 
 ---
 
 ## 🔧 API Highlights
 
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/ai/analyze` | POST | Triggers multi-step asynchronous resume analysis. |
-| `/api/ai/categorize` | POST | Uses AI to group skills into professional categories. |
-| `/api/locations/states` | GET | Fetch list of Indian States. |
-| `/api/education/colleges` | GET | Fetch accredited colleges by state. |
+| Category | Endpoint | Method | Description |
+| :--- | :--- | :--- | :--- |
+| **Analysis** | `/api/ai/analyze` | POST | Triggers asynchronous resume analysis via WebSocket. |
+| **Scraper** | `/api/scraper/search` | POST | Initiates an async LinkedIn job search. |
+| **Scraper** | `/api/scraper/details` | POST | Fetches full job details for a specific LinkedIn URL. |
+| **Tracker** | `/api/applications` | POST/GET | Manage job application records. |
+| **Backup** | `/api/applications/export` | GET | Download application history as CSV. |
 
 ---
 

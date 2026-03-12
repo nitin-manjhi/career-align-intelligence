@@ -62,4 +62,9 @@ public class JobApplicationResource {
         service.deleteApplication(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{id}/analysis-result")
+    public ResponseEntity<com.nit.domain.AIResponse> getAnalysisResult(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getAnalysisResultByJobId(id));
+    }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nit.dto.JobStatus;
 import com.nit.dto.JobType;
+import com.nit.dto.LinkedInJobDTO;
 import com.nit.dto.LinkedInJobResponse;
 import com.nit.dto.LinkedInJobSearchRequest;
 import com.nit.entity.AnalysisJob;
@@ -79,6 +80,14 @@ public class ScraperService {
             return (LinkedInJobResponse) results;
         }
         return null;
+    }
+
+    public Mono<LinkedInJobDTO> fetchJobDetails(String url) {
+        return webClient.post()
+                .uri(scraperApiUrl + "/jobs/details")
+                .bodyValue(java.util.Map.of("url", url))
+                .retrieve()
+                .bodyToMono(LinkedInJobDTO.class);
     }
 
     public void cacheResults(UUID jobId, LinkedInJobResponse response) {

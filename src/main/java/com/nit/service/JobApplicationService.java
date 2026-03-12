@@ -25,6 +25,7 @@ public class JobApplicationService {
 
     private final JobApplicationRepository repository;
     private final AuthUtil authUtil;
+    private final ResultSaveService resultSaveService;
 
     @Transactional(readOnly = true)
     public PaginatedResponse<JobApplicationDTO> getApplications(String search, ApplicationStatus status,
@@ -117,6 +118,31 @@ public class JobApplicationService {
         }
 
         repository.delete(application);
+    }
+
+    @Transactional(readOnly = true)
+    public com.nit.domain.AIResponse getAnalysisResultByJobId(Long id) {
+        Long userId = authUtil.getCurrentUserId();
+        JobApplication application = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        if (!application.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        if (application.getAnalysisId() == null) {
+            return null;
+        }
+
+        return resultSaveService.getResult(application.getAnalysisId());
+    }
+
+    @Transactional
+    public void updateApplicationAnalysisId(Long id, java.util.UUID analysisId) {
+        JobApplication application = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+        application.setAnalysisId(analysisId);
+        repository.save(application);
     }
 
     @Transactional

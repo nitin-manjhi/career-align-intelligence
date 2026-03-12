@@ -13,8 +13,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.client.ReactorClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClient;
+import reactor.netty.http.client.HttpClient;
+
+import java.time.Duration;
 
 @Configuration
 @RequiredArgsConstructor
@@ -43,7 +47,11 @@ public class OllamaConfig {
         @Bean
         public OllamaApi ollamaCloudApi(@Value("${spring.ollama.cloud.base-url}") String baseUrl,
                         @Value("${spring.ollama.cloud.api-key:}") String apiKey) {
+                HttpClient httpClient = HttpClient.create()
+                                .responseTimeout(Duration.ofSeconds(120));
+
                 RestClient.Builder customBuilder = RestClient.builder()
+                                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
                                 .defaultHeader("Authorization", apiKey)
                                 .messageConverters(converters -> {
                                         converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
@@ -56,7 +64,11 @@ public class OllamaConfig {
 
         @Bean
         public OllamaApi ollamaLocalApi(@Value("${spring.ollama.local.base-url}") String baseUrl) {
+                HttpClient httpClient = HttpClient.create()
+                                .responseTimeout(Duration.ofSeconds(120));
+
                 RestClient.Builder customBuilder = RestClient.builder()
+                                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
                                 .messageConverters(converters -> {
                                         converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
                                 });

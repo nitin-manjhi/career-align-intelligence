@@ -1,5 +1,6 @@
 package com.nit.controller;
 
+import com.nit.dto.LinkedInJobDTO;
 import com.nit.dto.LinkedInJobResponse;
 import com.nit.dto.LinkedInJobSearchRequest;
 import com.nit.entity.AnalysisJob;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.UUID;
@@ -49,5 +51,13 @@ public class ScraperResource {
             "progress", job.getProgress(),
             "errorMessage", job.getErrorMessage() != null ? job.getErrorMessage() : ""
         ));
+    }
+
+    @PostMapping("/details")
+    public Mono<ResponseEntity<LinkedInJobDTO>> getJobDetails(@RequestBody Map<String, String> request) {
+        String url = request.get("url");
+        return scraperService.fetchJobDetails(url)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
