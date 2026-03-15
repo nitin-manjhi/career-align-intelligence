@@ -1,7 +1,0 @@
-ALTER TABLE job_application 
-ADD COLUMN job_title VARCHAR(255),
-ADD COLUMN location VARCHAR(255),
-ADD COLUMN salary VARCHAR(255),
-ADD COLUMN skills TEXT,
-ADD COLUMN apply_link VARCHAR(1000),
-ADD COLUMN original_posted_date VARCHAR(255);
