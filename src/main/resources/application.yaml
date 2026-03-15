@@ -5,6 +5,12 @@ spring:
   application:
     name: career-align-intelligence
 
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.autoconfigure.google.genai.GoogleGenAiEmbeddingAutoConfiguration
+
   #redis configuration for caching and session management
   data:
     redis:
@@ -22,7 +28,6 @@ spring:
   app:
     ai:
       chat-provider: cloud
-      embedding-provider: local
 
   # Ollama Model Configurations
   ollama:
@@ -30,9 +35,6 @@ spring:
       base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
       chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
       api-key: ${OLLAMA_API_KEY:}
-    local:
-      base-url: ${OLLAMA_EMBEDDING_URL:http://localhost:11434}
-      embedding-model: ${OLLAMA_EMBEDDING_MODEL:bge-m3:latest}
 
   # Spring AI Standard Configurations
   ai:
@@ -43,31 +45,15 @@ spring:
       chat:
         options:
           model: nvidia/nemotron-3-nano-30b-a3b:free
-      embedding:
-        options:
-          model: nvidia/llama-nemotron-embed-vl-1b-v2:free
+
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
         chat:
           options:
             model: gemini-2.5-flash-lite
-        embedding:
-          text:
-            options:
-              model: gemini-embedding-2-preview
-              dimensions: 768
-          project-id: none
-          location: none
-          api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
-    vectorstore:
-      pgvector:
-        dimensions: 768 # Use 768 for gemini-embedding-2-preview / text-embedding-004. Use 1024 for Ollama bge-m3.
-        distance-type: COSINE_DISTANCE
-        index-type: HNSW
-        initialize-schema: true
 
-  #  DB configuration
+  # DB configuration
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/resumeDb}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}

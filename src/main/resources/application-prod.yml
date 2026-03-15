@@ -10,10 +10,11 @@ spring:
   kafka:
     bootstrap-servers: kafka:19092
 
-ollama:
-  api-key: ${OLLAMA_API_KEY:}
-  base-url: ${OLLAMA_BASE_URL:https://ollama.com}
-  model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
+  ollama:
+    cloud:
+      base-url: ${OLLAMA_BASE_URL:https://ollama.com}
+      chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
+      api-key: ${OLLAMA_API_KEY:}
 
 logging:
   level:
