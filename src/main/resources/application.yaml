@@ -1,5 +1,6 @@
 kafka.topic.analysis-job-topic: RESUME.AI.ANALYSIS_JOB_TOPIC
 kafka.topic.skill-analysis-job-topic: SKILL.AI.ANALYSIS_JOB_TOPIC
+kafka.topic.job-search-topic: JOB_SEARCH_TOPIC
 spring:
   application:
     name: career-align-intelligence
@@ -104,6 +105,9 @@ jwt:
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}
+
+app:
+  scraper-api-url: ${SCRAPER_API_URL:http://localhost:3000}
 
 server:
   port: 8080

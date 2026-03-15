@@ -1,22 +1,19 @@
 package com.nit.entity;
 
-import com.nit.dto.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
-import java.time.LocalDate;
 
 @Entity
-@Table(name = "job_application")
+@Table(name = "saved_job")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobApplication {
+public class SavedJob {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,31 +24,6 @@ public class JobApplication {
 
     @Column(name = "company_name", nullable = false)
     private String companyName;
-
-    @Column(name = "job_description", columnDefinition = "TEXT")
-    private String jobDescription;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ApplicationStatus status;
-
-    @Column(name = "hr_name")
-    private String hrName;
-
-    @Column(name = "hr_email")
-    private String hrEmail;
-
-    @Column(name = "phone")
-    private String phone;
-
-    @Column(name = "resume_path")
-    private String resumePath;
-
-    @Column(name = "closing_date")
-    private LocalDate closingDate;
-
-    @Column(name = "applied_date")
-    private LocalDate appliedDate;
 
     @Column(name = "job_title")
     private String jobTitle;
@@ -65,6 +37,9 @@ public class JobApplication {
     @Column(name = "skills", columnDefinition = "TEXT")
     private String skills;
 
+    @Column(name = "job_description", columnDefinition = "TEXT")
+    private String jobDescription;
+
     @Column(name = "apply_link", length = 1000)
     private String applyLink;
 
@@ -74,11 +49,4 @@ public class JobApplication {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
-    @Column(name = "analysis_id")
-    private java.util.UUID analysisId;
 }

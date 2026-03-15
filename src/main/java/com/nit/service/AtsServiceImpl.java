@@ -37,7 +37,8 @@ public class AtsServiceImpl implements AtsService {
 
     @Override
     @Transactional
-    public AIResponse analyzeResume(MultipartFile file, String jdText, String model, String companyName) {
+    public AIResponse analyzeResume(MultipartFile file, String jdText, String model, String companyName,
+            Long applicationId) {
         Long userId = authUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
@@ -72,7 +73,15 @@ public class AtsServiceImpl implements AtsService {
         AnalysisResultEntity analysisResultEntity = repository.save(entity);
 
         // Automatically add to Job Tracker
-        if (companyName != null && !companyName.trim().isEmpty()) {
+        if (applicationId != null) {
+            // Update existing application
+            JobApplicationDTO jobDto = new JobApplicationDTO();
+            jobDto.setAnalysisId(analysisResultEntity.getId());
+            jobApplicationService.updateApplicationAnalysisId(applicationId, analysisResultEntity.getId());
+            log.info("Updated existing Job Tracker record with ID: {} for analysis: {}", applicationId,
+                    analysisResultEntity.getId());
+        } else if (companyName != null && !companyName.trim().isEmpty()) {
+            // Create new application
             JobApplicationDTO jobDto = new JobApplicationDTO();
             jobDto.setCompanyName(companyName);
             jobDto.setJobDescription(jdText);
@@ -152,5 +161,12 @@ public class AtsServiceImpl implements AtsService {
         AnalysisJob job = analysisJobService.createJob(userId, resultId, model, JobType.EMAIL_GENERATION);
         kafkaProducerService.publishJobForResumeAnalysis(job.getId());
         return job.getId();
+    }
+
+    @Override
+    public String rewriteSummary(String summary, String model) {
+        Long userId = authUtil.getCurrentUserId();
+        // Since it's a synchronous rewrite, we directly call the aiService
+        return aiService.rewriteSummary(summary, model, userId);
     }
 }

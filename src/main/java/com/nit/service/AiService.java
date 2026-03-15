@@ -11,4 +11,6 @@ public interface AiService {
     String generateCoverLetter(java.util.UUID resultId, String model, java.util.UUID jobId, Long userId);
 
     void generateEmail(java.util.UUID resultId, String model, java.util.UUID jobId, Long userId);
+
+    String rewriteSummary(String summary, String model, Long userId);
 }

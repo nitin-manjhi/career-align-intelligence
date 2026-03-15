@@ -273,4 +273,23 @@ public class AiServiceImpl implements AiService {
 
         return aiResponse;
     }
+
+    @Override
+    public String rewriteSummary(String summary, String model, Long userId) {
+        ChatModel chatModel = selectChatModel(model, userId);
+        ChatClient chatClient = ChatClient.create(chatModel);
+
+        String userPrompt = promptLoaderService.loadPrompt("rewrite-summary-prompt.st")
+                .replace("{summary}", summary);
+
+        log.info("Rewriting summary for user: {}", userId);
+        String rewritten = chatClient.prompt().user(userPrompt).call().content();
+        
+        // Clean up the response if the LLM includes unwanted text (like "Rewritten Summary:")
+        if (rewritten != null && rewritten.contains("Rewritten Summary:")) {
+            rewritten = rewritten.split("Rewritten Summary:")[1].trim();
+        }
+        
+        return rewritten;
+    }
 }

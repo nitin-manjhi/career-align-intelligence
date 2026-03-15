@@ -15,7 +15,7 @@ public class JobApplicationDTO {
     @NotBlank(message = "Company name is required")
     private String companyName;
 
-    @Size(max = 2000, message = "Job description cannot exceed 2000 characters")
+    @Size(max = 65535, message = "Job description is too long")
     private String jobDescription;
 
     @NotNull(message = "Status is required")
@@ -29,5 +29,11 @@ public class JobApplicationDTO {
     private LocalDate appliedDate;
     private Instant createdAt;
     private Instant updatedAt;
+    private String jobTitle;
+    private String location;
+    private String salary;
+    private String skills;
+    private String applyLink;
+    private String originalPostedDate;
     private java.util.UUID analysisId;
 }
