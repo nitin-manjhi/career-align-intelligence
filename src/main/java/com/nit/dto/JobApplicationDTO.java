@@ -29,5 +29,11 @@ public class JobApplicationDTO {
     private LocalDate appliedDate;
     private Instant createdAt;
     private Instant updatedAt;
+    private String jobTitle;
+    private String location;
+    private String salary;
+    private String skills;
+    private String applyLink;
+    private String originalPostedDate;
     private java.util.UUID analysisId;
 }

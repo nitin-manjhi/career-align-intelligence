@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import io.jsonwebtoken.JwtException;
+import org.springframework.security.core.AuthenticationException;
 import java.time.Instant;
 
 @RestControllerAdvice
@@ -68,6 +70,19 @@ public class GlobalExceptionHandler {
                                 HttpStatus.BAD_REQUEST,
                                 "BAD_REQUEST",
                                 ex.getMessage(),
+                                request);
+        }
+
+        // ===== Authentication/Security =====
+        @ExceptionHandler({ AuthenticationException.class, JwtException.class })
+        public ResponseEntity<ApiError> handleAuthentication(
+                        Exception ex,
+                        HttpServletRequest request) {
+
+                return buildError(
+                                HttpStatus.UNAUTHORIZED,
+                                "UNAUTHORIZED",
+                                "Invalid or expired token. Please login again.",
                                 request);
         }
 

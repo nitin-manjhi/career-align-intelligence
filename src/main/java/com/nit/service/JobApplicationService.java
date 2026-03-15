@@ -103,6 +103,12 @@ public class JobApplicationService {
         application.setResumePath(dto.getResumePath());
         application.setClosingDate(dto.getClosingDate());
         application.setAppliedDate(dto.getAppliedDate());
+        application.setJobTitle(dto.getJobTitle());
+        application.setLocation(dto.getLocation());
+        application.setSalary(dto.getSalary());
+        application.setSkills(dto.getSkills());
+        application.setApplyLink(dto.getApplyLink());
+        application.setOriginalPostedDate(dto.getOriginalPostedDate());
 
         return toDTO(repository.save(application));
     }
@@ -173,6 +179,12 @@ public class JobApplicationService {
         dto.setAppliedDate(application.getAppliedDate());
         dto.setCreatedAt(application.getCreatedAt());
         dto.setUpdatedAt(application.getUpdatedAt());
+        dto.setJobTitle(application.getJobTitle());
+        dto.setLocation(application.getLocation());
+        dto.setSalary(application.getSalary());
+        dto.setSkills(application.getSkills());
+        dto.setApplyLink(application.getApplyLink());
+        dto.setOriginalPostedDate(application.getOriginalPostedDate());
         dto.setAnalysisId(application.getAnalysisId());
         return dto;
     }
@@ -189,6 +201,12 @@ public class JobApplicationService {
                 .resumePath(dto.getResumePath())
                 .closingDate(dto.getClosingDate())
                 .appliedDate(dto.getAppliedDate() != null ? dto.getAppliedDate() : LocalDate.now())
+                .jobTitle(dto.getJobTitle())
+                .location(dto.getLocation())
+                .salary(dto.getSalary())
+                .skills(dto.getSkills())
+                .applyLink(dto.getApplyLink())
+                .originalPostedDate(dto.getOriginalPostedDate())
                 .analysisId(dto.getAnalysisId())
                 .build();
     }
