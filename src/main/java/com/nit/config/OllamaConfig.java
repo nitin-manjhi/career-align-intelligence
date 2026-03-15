@@ -5,14 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.OllamaEmbeddingModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
-import org.springframework.ai.ollama.api.OllamaEmbeddingOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.ReactorClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClient;
@@ -24,93 +21,70 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class OllamaConfig {
 
-        private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-        @Value("${spring.app.ai.chat-provider:cloud}")
-        private String chatProvider;
+    @Value("${spring.app.ai.chat-provider:cloud}")
+    private String chatProvider;
 
-        @Value("${spring.app.ai.embedding-provider:local}")
-        private String embeddingProvider;
+    @Value("${spring.ollama.cloud.chat-model:}")
+    private String cloudChatModel;
 
-        @Value("${spring.ollama.cloud.chat-model}")
-        private String cloudChatModel;
+    @Value("${spring.ollama.local.chat-model:}")
+    private String localChatModel;
 
-        @Value("${spring.ollama.local.chat-model:}")
-        private String localChatModel;
+    @Bean
+    public OllamaApi ollamaCloudApi(@Value("${spring.ollama.cloud.base-url:https://ollama.com}") String baseUrl,
+                                    @Value("${spring.ollama.cloud.api-key:}") String apiKey) {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(120));
 
-        @Value("${spring.ollama.cloud.embedding-model:}")
-        private String cloudEmbeddingModel;
+        RestClient.Builder customBuilder = RestClient.builder()
+                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
+                .defaultHeader("Authorization", apiKey)
+                .messageConverters(converters -> {
+                    converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
+                });
+        return OllamaApi.builder()
+                .baseUrl(baseUrl)
+                .restClientBuilder(customBuilder)
+                .build();
+    }
 
-        @Value("${spring.ollama.local.embedding-model}")
-        private String localEmbeddingModel;
+    @Bean
+    public OllamaApi ollamaLocalApi(@Value("${spring.ollama.local.base-url:http://localhost:11434}") String baseUrl) {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(120));
 
-        @Bean
-        public OllamaApi ollamaCloudApi(@Value("${spring.ollama.cloud.base-url}") String baseUrl,
-                        @Value("${spring.ollama.cloud.api-key:}") String apiKey) {
-                HttpClient httpClient = HttpClient.create()
-                                .responseTimeout(Duration.ofSeconds(120));
+        RestClient.Builder customBuilder = RestClient.builder()
+                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
+                .messageConverters(converters -> {
+                    converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
+                });
+        return OllamaApi.builder()
+                .baseUrl(baseUrl)
+                .restClientBuilder(customBuilder)
+                .build();
+    }
 
-                RestClient.Builder customBuilder = RestClient.builder()
-                                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
-                                .defaultHeader("Authorization", apiKey)
-                                .messageConverters(converters -> {
-                                        converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
-                                });
-                return OllamaApi.builder()
-                                .baseUrl(baseUrl)
-                                .restClientBuilder(customBuilder)
-                                .build();
-        }
+    @Bean
+    public OllamaChatModel ollamaChatModel(OllamaApi ollamaCloudApi, OllamaApi ollamaLocalApi) {
+        boolean isCloud = "cloud".equalsIgnoreCase(chatProvider);
+        OllamaApi targetApi = isCloud ? ollamaCloudApi : ollamaLocalApi;
+        String modelName = isCloud ? cloudChatModel : localChatModel;
 
-        @Bean
-        public OllamaApi ollamaLocalApi(@Value("${spring.ollama.local.base-url}") String baseUrl) {
-                HttpClient httpClient = HttpClient.create()
-                                .responseTimeout(Duration.ofSeconds(120));
+        return OllamaChatModel.builder()
+                .ollamaApi(targetApi)
+                .defaultOptions(OllamaChatOptions.builder()
+                        .model(modelName)
+                        .temperature(0.7)
+                        .build())
+                .build();
+    }
 
-                RestClient.Builder customBuilder = RestClient.builder()
-                                .requestFactory(new ReactorClientHttpRequestFactory(httpClient))
-                                .messageConverters(converters -> {
-                                        converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
-                                });
-                return OllamaApi.builder()
-                                .baseUrl(baseUrl)
-                                .restClientBuilder(customBuilder)
-                                .build();
-        }
-
-        @Bean
-        public OllamaChatModel ollamaChatModel(OllamaApi ollamaCloudApi, OllamaApi ollamaLocalApi) {
-                boolean isCloud = "cloud".equalsIgnoreCase(chatProvider);
-                OllamaApi targetApi = isCloud ? ollamaCloudApi : ollamaLocalApi;
-                String modelName = isCloud ? cloudChatModel : localChatModel;
-
-                return OllamaChatModel.builder()
-                                .ollamaApi(targetApi)
-                                .defaultOptions(OllamaChatOptions.builder()
-                                                .model(modelName)
-                                                .temperature(0.7)
-                                                .build())
-                                .build();
-        }
-
-        @Bean
-        public OllamaEmbeddingModel ollamaEmbeddingModel(OllamaApi ollamaCloudApi, OllamaApi ollamaLocalApi) {
-                boolean isCloud = "cloud".equalsIgnoreCase(embeddingProvider);
-                OllamaApi targetApi = isCloud ? ollamaCloudApi : ollamaLocalApi;
-                String modelName = isCloud ? cloudEmbeddingModel : localEmbeddingModel;
-
-                return OllamaEmbeddingModel.builder()
-                                .ollamaApi(targetApi)
-                                .defaultOptions(OllamaEmbeddingOptions.builder()
-                                                .model(modelName)
-                                                .build())
-                                .build();
-        }
-
-        @Bean
-        public ChatClient ollamaChatClient(OllamaChatModel ollamaChatModel) {
-                return ChatClient.builder(ollamaChatModel)
-                                .defaultAdvisors(new SimpleLoggerAdvisor())
-                                .build();
-        }
+    @Bean
+    public ChatClient ollamaChatClient(OllamaChatModel ollamaChatModel) {
+        return ChatClient.builder(ollamaChatModel)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .build();
+    }
 }

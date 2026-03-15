@@ -5,271 +5,62 @@ import com.nit.domain.ResumeAnalysisDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class SkillMatchingService {
 
-    private final VectorStore ollamaVectorStore;
-    private final VectorStore googleVectorStore;
-    private final VectorStore openAiVectorStore;
     private final ObjectMapper objectMapper;
     private final PromptLoaderService promptLoaderService;
     private final ExperienceMatchingService experienceMatchingService;
     private final SkillWeightingService skillWeightingService;
 
     public SkillMatchingService(
-            @Qualifier("ollamaVectorStore") VectorStore ollamaVectorStore,
-            @Qualifier("googleVectorStore") ObjectProvider<VectorStore> googleVectorStoreProvider,
-            @Qualifier("openAiVectorStore") ObjectProvider<VectorStore> openAiVectorStoreProvider,
             ObjectMapper objectMapper,
             PromptLoaderService promptLoaderService,
             ExperienceMatchingService experienceMatchingService,
             SkillWeightingService skillWeightingService) {
-        this.ollamaVectorStore = ollamaVectorStore;
-        this.googleVectorStore = googleVectorStoreProvider.getIfAvailable();
-        this.openAiVectorStore = openAiVectorStoreProvider.getIfAvailable();
         this.objectMapper = objectMapper;
         this.promptLoaderService = promptLoaderService;
         this.experienceMatchingService = experienceMatchingService;
         this.skillWeightingService = skillWeightingService;
     }
 
-    private VectorStore getVectorStore(ChatModel chatModel) {
-        String modelName = chatModel.getClass().getSimpleName();
-        boolean isGoogleModel = modelName.contains("Google");
-        boolean isOpenAiModel = modelName.contains("OpenAi");
-
-        log.info("Skill Matching Request - ChatModel: {} (isGoogle: {}, isOpenAi: {})",
-                modelName, isGoogleModel, isOpenAiModel);
-
-        if (isGoogleModel && googleVectorStore != null) {
-            log.info("Selected GOOGLE Vector Store.");
-            return googleVectorStore;
-        }
-
-        if (isOpenAiModel && openAiVectorStore != null) {
-            log.info("Selected OPENAI Vector Store.");
-            return openAiVectorStore;
-        }
-
-        log.info("Selected OLLAMA Vector Store.");
-        return ollamaVectorStore;
-    }
-
     /**
-     * Pipeline implementation for Skill Matching using RAG and Semantic Search.
+     * Optimized Pipeline for Skill Matching using a Single-Pass LLM call.
+     * This minimizes latency by removing RAG overhead and multiple AI roundtrips.
      */
     public ResumeAnalysisDTO performSkillMatching(String resumeId, String resumeText, String jdText,
             ChatModel selectedChatModel) {
-        log.info("Starting Skill Matching Pipeline for resumeId: {} using store: {}", resumeId,
-                getVectorStore(selectedChatModel).getClass().getSimpleName());
-
-        // 1 & 2. Chunking (skip parser since we have text)
-        List<Document> splitDocuments = chunkText(resumeId, resumeText);
-
-        // 3. Vectorization (Embedded once per upload logic)
-        VectorStore usedStore = embedAndStore(resumeId, splitDocuments, selectedChatModel);
-
-        // 4. Skill Extractor: Get technical skills from JD
-        List<String> jdSkills = extractSkillsFromJd(jdText, selectedChatModel);
-
-        // 5 & 6. Semantic Matching & Scoring
-        return matchSkillsAndCalculateScore(resumeId, jdSkills, jdText, resumeText, selectedChatModel, usedStore);
-    }
-
-    private List<Document> chunkText(String resumeId, String text) {
-        log.debug("Chunking text for resumeId: {}...", resumeId);
-        Document doc = new Document(text, Map.of("resume_id", resumeId));
-        TokenTextSplitter splitter = new TokenTextSplitter(300, 50, 5, 100, true);
-        return splitter.apply(List.of(doc));
-    }
-
-    private VectorStore embedAndStore(String resumeId, List<Document> documents, ChatModel selectedChatModel) {
-        VectorStore vectorStore = getVectorStore(selectedChatModel);
-        log.info("Generating embeddings and storing {} chunks for resumeId: {} in {}...",
-                documents.size(), resumeId, vectorStore.toString());
+        log.info("Starting Optimized Single-Pass Analysis for resumeId: {}", resumeId);
         long startTime = System.currentTimeMillis();
-        try {
-            vectorStore.add(documents);
-            log.info("Successfully stored embeddings in {}ms", System.currentTimeMillis() - startTime);
-            return vectorStore;
-        } catch (Exception e) {
-            log.warn("💥 Primary embedding failed ({}). Falling back to OLLAMA...", e.getMessage());
-            if (vectorStore != ollamaVectorStore) {
-                long fallbackStart = System.currentTimeMillis();
-                ollamaVectorStore.add(documents);
-                log.info("Successfully stored OLLAMA fallback embeddings in {}ms", System.currentTimeMillis() - fallbackStart);
-                return ollamaVectorStore;
-            } else {
-                log.error("OLLAMA is already the primary store and it failed. Cannot fallback.");
-                throw e;
-            }
-        }
-    }
 
-    private List<String> extractSkillsFromJd(String jdText, ChatModel selectedChatModel) {
-        log.debug("Extracting skills from JD using {}...", selectedChatModel.getClass().getSimpleName());
-        ChatClient chatClient = ChatClient.create(selectedChatModel);
+        // 1. Single Comprehensive AI Call
+        ResumeAnalysisDTO analysis = generateComprehensiveAnalysis(jdText, resumeText, selectedChatModel);
+        
+        // 2. Local Enrichment & Structural Scoring (Fast, non-AI)
+        enrichWithLocalMetrics(analysis, resumeText, jdText);
 
-        String prompt = promptLoaderService.loadPrompt("jd-skills-extractor.st")
-                .replace("{jdText}", jdText);
-
-        String response = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content()
-                .replaceAll("```json", "").replaceAll("```", "").trim();
-
-        try {
-            Map<String, List<String>> result = objectMapper.readValue(response, Map.class);
-            return result.getOrDefault("skills", List.of());
-        } catch (Exception e) {
-            log.error("Failed to parse JD skills", e);
-            return List.of();
-        }
-    }
-
-    private ResumeAnalysisDTO matchSkillsAndCalculateScore(String resumeId, List<String> jdSkills, String jdText,
-            String resumeText, ChatModel selectedChatModel, VectorStore vectorStore) {
-        log.info("Matching {} extracted skills against vector store for resumeId: {}...", jdSkills.size(), resumeId);
-
-        List<String> matched = new ArrayList<>();
-        List<String> missing = new ArrayList<>();
-
-        for (String skill : jdSkills) {
-            String normalizedSkill = normalizeSkill(skill);
-            log.debug("Searching for skill: '{}' (normalized: '{}')", skill, normalizedSkill);
-
-            // Search with a slightly more lenient threshold for semantic matching
-            SearchRequest request = SearchRequest.builder()
-                    .query(normalizedSkill)
-                    .topK(3)
-                    .similarityThreshold(0.50)
-                    .filterExpression("resume_id == '" + resumeId + "'")
-                    .build();
-
-            try {
-                List<Document> results = vectorStore.similaritySearch(request);
-                if (!results.isEmpty()) {
-                    log.debug("✅ Found match for '{}' with score: {}", skill,
-                            results.get(0).getMetadata().get("distance"));
-                    matched.add(skill);
-                } else {
-                    log.debug("❌ No match found for '{}'", skill);
-                    missing.add(skill);
-                }
-            } catch (Exception e) {
-                log.error("💥 Similarity search failed for skill: {}. Reason: {}", skill, e.getMessage());
-                missing.add(skill);
-            }
-        }
-
-        // 1. Semantic Matching Score (Existing logic)
-        double semanticScore = jdSkills.isEmpty() ? 0 : (matched.size() * 100.0) / jdSkills.size();
-
-        // 2. Keyword Matching Score (Exact string matches)
-        double keywordScore = calculateKeywordScore(resumeText, jdSkills);
-
-        // 3. Experience Matching Score (New module)
-        ExperienceMatchingService.ExperienceResult expResult = experienceMatchingService.computeExperience(resumeText,
-                jdSkills);
-
-        // 5. Skill Importance Weighting (New module)
-        SkillWeightingService.WeightingResult weightingResult = skillWeightingService.calculateWeightedScore(jdText,
-                jdSkills, matched);
-
-        // 6. Hybrid ATS Scoring Formula (Updated):
-        // ATS_SCORE = 0.40 * weightedSkillScore + 0.40 * semanticScore + 0.20 *
-        // experienceScore
-        int finalAtsScore = (int) Math.round(
-                (0.40 * weightingResult.getWeightedSkillScore()) +
-                        (0.40 * semanticScore) +
-                        (0.20 * expResult.getExperienceScore()));
-
-        log.info("ATS Scoring Summary [Weighted: {}%, Semantic: {}%, Experience: {}%] -> Final: {}%",
-                Math.round(weightingResult.getWeightedSkillScore()), Math.round(semanticScore),
-                expResult.getExperienceScore(), finalAtsScore);
-
-        // Generate final analysis using LLM
-        ResumeAnalysisDTO analysis = generateFinalAnalysis(matched, missing, finalAtsScore, jdText, resumeText,
-                selectedChatModel);
-
-        // Overwrite/Set calculated score components in DTO
-        analysis.setScore(finalAtsScore);
-        analysis.setKeywordScore(keywordScore);
-        analysis.setSemanticScore(semanticScore);
-        analysis.setExperienceScore((int) expResult.getExperienceScore());
-        analysis.setSkillExperience(expResult.getSkillExperience());
-        analysis.setWeightedSkillScore(weightingResult.getWeightedSkillScore());
-        analysis.setSkillImportance(weightingResult.getSkillImportance());
-
+        log.info("Analysis Complete for resumeId: {} in {}ms", resumeId, System.currentTimeMillis() - startTime);
         return analysis;
     }
 
-    private double calculateKeywordScore(String resumeText, List<String> jdSkills) {
-        if (resumeText == null || jdSkills == null || jdSkills.isEmpty())
-            return 0;
-        String lowerResume = resumeText.toLowerCase();
-        long exactMatches = jdSkills.stream()
-                .filter(skill -> lowerResume.contains(skill.toLowerCase()))
-                .count();
-        return (exactMatches * 100.0) / jdSkills.size();
-    }
-
-    private String normalizeSkill(String skill) {
-        if (skill == null)
-            return "";
-        String s = skill.toLowerCase().trim();
-        if (s.contains("node.js"))
-            return "nodejs";
-        if (s.contains("react.js"))
-            return "reactjs";
-        return skill;
-    }
-
-    private ResumeAnalysisDTO generateFinalAnalysis(List<String> matched, List<String> missing, int score,
-            String jdText, String resumeText, ChatModel selectedChatModel) {
+    private ResumeAnalysisDTO generateComprehensiveAnalysis(String jdText, String resumeText, ChatModel selectedChatModel) {
         log.info("Generating comprehensive final analysis report using {}...",
                 selectedChatModel.getClass().getSimpleName());
+        
         ChatClient chatClient = ChatClient.create(selectedChatModel);
-
         String promptTemplate = promptLoaderService.loadPrompt("analysis-prompt.st");
-
-        String formatInstruction = """
-                {
-                  "score": integer (0-100),
-                  "scoreExplanation": ["Reason 1", "Reason 2"],
-                  "matchedSkills": ["Skill 1", "Skill 2"],
-                  "missingSkills": ["Missing 1", "Missing 2"],
-                  "improvementSuggestions": ["Fix 1", "Fix 2"],
-                  "skillImportance": {"SkillName": "REQUIRED|PREFERRED|OPTIONAL"},
-                  "weightedSkillScore": double,
-                  "optimizedResume": "PROFESSIONAL_LAYOUT (Header\\n\\nEXPERIENCE\\n• Achievement 1)",
-                  "structuredResume": {
-                    "fullName": "Name", "title": "Title", "contact": "Phone | Email", "summary": "Full Summary", "skills": ["s1", "s2"], "workExperience": [{"title": "t", "company": "c", "date": "d", "points": ["p1"]}], "education": [{"title": "t", "college": "c", "date": "y", "location": "l"}]
-                  }
-                }
-                """;
 
         String finalPrompt = promptTemplate
                 .replace("{jdText}", jdText)
-                .replace("{resumeText}", resumeText)
-                .replace("{matchedSkills}", String.join(", ", matched))
-                .replace("{missingSkills}", String.join(", ", missing))
-                .replace("{formatInstruction}", formatInstruction);
+                .replace("{resumeText}", resumeText);
 
         try {
             String jsonResponse = chatClient.prompt()
@@ -279,18 +70,113 @@ public class SkillMatchingService {
                     .replaceAll("(?s)^.*?(\\{.*\\}).*$", "$1") // Extract JSON block securely
                     .trim();
 
-            log.debug("Raw AI Final JSON: {}", jsonResponse);
             return objectMapper.readValue(jsonResponse, ResumeAnalysisDTO.class);
         } catch (Exception e) {
-            log.error("💥 Rich analysis generation failed. Falling back to basic record.", e);
+            log.error("💥 Single-pass analysis generation failed. Falling back to basic record.", e);
             ResumeAnalysisDTO fallback = new ResumeAnalysisDTO();
-            fallback.setMatchedSkills(matched);
-            fallback.setMissingSkills(missing);
-            fallback.setScore(score);
-            fallback.setScoreExplanation(List.of("Calculated based on semantic keyword density."));
-            fallback.setImprovementSuggestions(List.of("Add missing keywords: " + String.join(", ", missing)));
+            fallback.setScore(0);
             fallback.setOptimizedResume(resumeText);
             return fallback;
         }
+    }
+
+    private void enrichWithLocalMetrics(ResumeAnalysisDTO analysis, String resumeText, String jdText) {
+        List<String> matched = analysis.getMatchedSkills() != null ? analysis.getMatchedSkills() : new ArrayList<>();
+        List<String> missing = analysis.getMissingSkills() != null ? analysis.getMissingSkills() : new ArrayList<>();
+        List<String> allJdSkills = Stream.concat(matched.stream(), missing.stream()).collect(Collectors.toList());
+
+        // 1. Keyword Matching Score
+        double keywordScore = calculateKeywordScore(resumeText, allJdSkills);
+
+        // 2. Experience Matching Score
+        ExperienceMatchingService.ExperienceResult expResult = experienceMatchingService.computeExperience(resumeText, allJdSkills);
+
+        // 3. Skill Importance Weighting
+        SkillWeightingService.WeightingResult weightingResult = skillWeightingService.calculateWeightedScore(jdText, allJdSkills, matched);
+
+        // 4. Hybrid ATS Scoring Formula
+        double semanticScore = allJdSkills.isEmpty() ? 0 : (matched.size() * 100.0) / allJdSkills.size();
+
+        int finalAtsScore = (int) Math.round(
+                (0.40 * weightingResult.getWeightedSkillScore()) +
+                (0.40 * semanticScore) +
+                (0.20 * expResult.getExperienceScore()));
+
+        // Update DTO
+        analysis.setScore(finalAtsScore);
+        analysis.setKeywordScore(keywordScore);
+        analysis.setSemanticScore(semanticScore);
+        analysis.setExperienceScore((int) expResult.getExperienceScore());
+        analysis.setSkillExperience(expResult.getSkillExperience());
+        analysis.setWeightedSkillScore(weightingResult.getWeightedSkillScore());
+        
+        if (analysis.getSkillImportance() == null) {
+            analysis.setSkillImportance(weightingResult.getSkillImportance());
+        }
+
+        // 5. GENERATE PLAIN TEXT RESUME LOCALLY (Save token generation time)
+        if (analysis.getOptimizedResume() == null && analysis.getStructuredResume() != null) {
+            analysis.setOptimizedResume(generatePlainTextResume(analysis.getStructuredResume()));
+        }
+    }
+
+    /**
+     * Converts structured JSON resume to plain text locally.
+     * This avoids asking the AI to generate the same content twice, saving 2-4 seconds of latency.
+     */
+    @SuppressWarnings("unchecked")
+    private String generatePlainTextResume(Object structured) {
+        try {
+            java.util.Map<String, Object> map = objectMapper.convertValue(structured, java.util.Map.class);
+            StringBuilder sb = new StringBuilder();
+            
+            sb.append(map.getOrDefault("fullName", "CANDIDATE NAME")).append("\n");
+            sb.append(map.getOrDefault("title", "")).append("\n");
+            sb.append(map.getOrDefault("contact", "")).append("\n\n");
+            
+            sb.append("PROFESSIONAL SUMMARY\n");
+            sb.append(map.getOrDefault("summary", "")).append("\n\n");
+            
+            sb.append("TECHNICAL SKILLS\n");
+            List<String> skills = (List<String>) map.get("skills");
+            if (skills != null) {
+                sb.append(String.join(", ", skills)).append("\n\n");
+            }
+            
+            sb.append("WORK EXPERIENCE\n");
+            List<java.util.Map<String, Object>> exps = (List<java.util.Map<String, Object>>) map.get("workExperience");
+            if (exps != null) {
+                for (java.util.Map<String, Object> exp : exps) {
+                    sb.append(exp.get("title")).append(" - ").append(exp.get("company")).append(" | ").append(exp.get("date")).append("\n");
+                    List<String> points = (List<String>) exp.get("points");
+                    if (points != null) {
+                        for (String p : points) sb.append("• ").append(p).append("\n");
+                    }
+                    sb.append("\n");
+                }
+            }
+            
+            sb.append("EDUCATION\n");
+            List<java.util.Map<String, Object>> edus = (List<java.util.Map<String, Object>>) map.get("education");
+            if (edus != null) {
+                for (java.util.Map<String, Object> edu : edus) {
+                    sb.append(edu.get("title")).append(" | ").append(edu.get("date")).append("\n");
+                    sb.append(edu.get("college")).append(", ").append(edu.get("location")).append("\n\n");
+                }
+            }
+            
+            return sb.toString();
+        } catch (Exception e) {
+            return "Resume preview generated successfully in Detailed View.";
+        }
+    }
+
+    private double calculateKeywordScore(String resumeText, List<String> jdSkills) {
+        if (resumeText == null || jdSkills == null || jdSkills.isEmpty()) return 0;
+        String lowerResume = resumeText.toLowerCase();
+        long exactMatches = jdSkills.stream()
+                .filter(skill -> lowerResume.contains(skill.toLowerCase()))
+                .count();
+        return (exactMatches * 100.0) / jdSkills.size();
     }
 }

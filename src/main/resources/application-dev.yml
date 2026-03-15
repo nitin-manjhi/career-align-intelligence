@@ -16,14 +16,8 @@ spring:
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
-    vectorstore:
-      pgvector:
-        dimensions: 1024
 
   ollama:
     cloud:
       base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
       chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
-    local:
-      base-url: ${OLLAMA_EMBEDDING_URL:http://localhost:11434}
-      embedding-model: ${OLLAMA_EMBEDDING_MODEL:bge-large:latest}
