@@ -23,6 +23,9 @@ public class AuthUtil {
     @Value("${jwt.secret-key}")
     private String jwtSecretKey;
 
+    @Value("${jwt.expiration-ms}")
+    private long jwtExpirationMs;
+
     private SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
     }
@@ -33,8 +36,7 @@ public class AuthUtil {
                 .claim("userId", user.getId().toString())
                 .claim("role", user.getRole().name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 599 * 1000 * 10)) // Increased to 100 mins for dev
-                                                                                    // convenience
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSecretKey())
                 .compact();
     }

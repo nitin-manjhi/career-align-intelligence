@@ -1,0 +1,2 @@
+jwt:
+  expiration-ms: 360000 # 6 minutes for local development
