@@ -143,6 +143,28 @@ public class JobApplicationService {
         return resultSaveService.getResult(application.getAnalysisId());
     }
 
+    @Transactional(readOnly = true)
+    public com.nit.dto.JobApplicationStatsDTO getStats() {
+        Long userId = authUtil.getCurrentUserId();
+        LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+
+        List<Object[]> statusCounts = repository.countByStatus(userId);
+        java.util.Map<String, Long> distribution = statusCounts.stream()
+                .collect(Collectors.toMap(
+                        row -> row[0].toString(),
+                        row -> (Long) row[1]
+                ));
+
+        return com.nit.dto.JobApplicationStatsDTO.builder()
+                .totalApplications(repository.countByUserId(userId))
+                .statusDistribution(distribution)
+                .applicationsLast7Days(repository.countByUserIdAndAppliedDateGreaterThanEqual(userId, sevenDaysAgo))
+                .applicationsLast30Days(repository.countByUserIdAndAppliedDateGreaterThanEqual(userId, thirtyDaysAgo))
+                .withAnalysisCount(repository.countWithAnalysis(userId))
+                .build();
+    }
+
     @Transactional
     public void updateApplicationAnalysisId(Long id, java.util.UUID analysisId) {
         JobApplication application = repository.findById(id)

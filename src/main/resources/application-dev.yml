@@ -21,3 +21,5 @@ spring:
     cloud:
       base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
       chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
+jwt:
+  expiration-ms: 360000 # 6 minutes for local development

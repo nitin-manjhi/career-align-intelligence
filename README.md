@@ -1,88 +1,172 @@
-# CareerAlign Intelligence - Full-Stack AI Ecosystem
+# CareerAlign Intelligence 🚀
+### *The Ultimate AI-Powered Ecosystem for Career Growth & ATS Optimization*
 
-**CareerAlign Intelligence** is a robust, AI-driven platform built with Spring Boot 3.5 and Angular 19. It powers the end-to-end career lifecycle—from AI-powered job searching and resume analysis to manual application tracking and secure data backups.
-
----
-
-## 🚀 Core Features
-
-### 🧠 Multi-LLM Intelligence
-- **Ollama Integration**: Powered by `minimax-m2.5:cloud` for efficient analysis.
-- **Google Gemini Integration**: Native support for Gemini embedding models and text generation (`gemini-2.5-flash-lite`).
-- **Hybrid ATS Scoring**: Semantic evaluation that prioritizes "Required" vs "Optional" skills with custom importance weighting.
-
-### 🔍 LinkedIn Job Finder (NEW)
-- **Real-time Scraping**: Integrated with a Playwright/Puppeteer-based scraper to find live LinkedIn jobs.
-- **Intelligent Detail Fetching**: On-demand scraping of full job descriptions and required skills.
-- **Search Criteria**: Filter by location, experience level (Entry/Mid/Senior), job type (Full-time/Contract), and remote status.
-
-### 📋 Job Application Tracker
-- **One-Click Tracking**: Directly add matched LinkedIn jobs to your personal tracker.
-- **Workflow Management**: Manage applications through statuses: `INITIALIZED`, `APPLIED`, `PROCESSING`, `REJECTED`, `SELECTED`.
-- **Resume Linking**: Associate specific resume analyses with individual job applications.
-
-### 📅 Document & Data Management
-- **Backup & Restore**: Export your entire job tracker history to CSV format for layman-friendly data portability.
-- **Waitlist & PWA**: Fully functional Progressive Web App (PWA) with Android optimization and a managed early-access waitlist.
-- **Resume Generation**: High-fidelity, ATS-readable PDF generation with real-time live previews.
+![CareerAlign Banner](docs/images/banner.png)
 
 ---
 
-## 🏗️ Architecture & Ecosystem
+## 🌟 Overview
+
+**CareerAlign Intelligence** is a cutting-edge, enterprise-grade platform designed to revolutionize the way candidates navigate the modern job market. By leveraging multi-LLM orchestration (Google Gemini & Ollama) and advanced textual analysis, it provides deep resume analysis, real-time LinkedIn job scraping, and intelligent ATS scoring.
+
+Built with **Spring Boot 3.5 (Java 21)** and **Angular 20**, this project showcases a robust modular architecture, event-driven processing via **Kafka**, and real-time state management through **WebSockets**.
+
+---
+
+## 🚀 Key Features
+
+### 🧠 Multi-LLM Intelligence Engine
+- **Hybrid Inference Orchestration**: Dynamically alternates between:
+    - **Google Gemini 2.5 Flash**: Orchestrates high-speed, complex reasoning.
+    - **Ollama**: Local model support (minimax-m2.5) for enhanced privacy and offline processing.
+    - **OpenRouter & Nvidia Nemotron**: Specialized inference via lightweight, high-token models for lightning-fast analysis.
+- **Semantic ATS Scoring**: Beyond simple keyword matching—analyzes professional context and experience relevance to score resumes against Job Descriptions (JD).
+- **Skill Weighting**: Custom importance weighting for "Required" vs "Optional" skills, simulating real-world recruiter priorities.
+
+### 🔍 Real-time LinkedIn Ecosystem
+- **Intelligent Scraper**: A Playwright-powered engine that fetches live LinkedIn jobs based on location, experience, and remote status.
+- **Deep Job Analysis**: Automatically extracts required skills and job nuances from scraping results.
+- **One-Click Tracking**: Seamlessly move scraped jobs into your personal tracking dashboard.
+
+### 📋 Enterprise Job Tracker
+- **Stage Management**: Full lifecycle tracking from `INITIALIZED` to `SELECTED` with dynamic color-coded status tags.
+- **Strategic Stats Dashboard**: A high-end analytics hub with:
+    - **KPI Cards**: Real-time tracking of total applications, recent 7-day velocity, and AI-aligned reports.
+    - **Status Distribution**: A grid-based visualization of conversion rates (Applied vs Interviewing).
+- **Resume-Analysis Linking**: Every application is tied to a specific AI-driven analysis, allowing you to see *why* you matched with a job months later.
+- **Data Portability**: Integrated backup and restore functionality via CSV export.
+
+### 📱 Modern User Experience
+- **Fluid UI**: Fully responsive Dashboard built with the latest Angular 20 features.
+- **Live Resume Generation**: ATS-optimized PDF generation with real-time previewing.
+- **Real-time Notifications**: WebSocket-driven progress updates for long-running AI tasks.
+
+---
+
+## 🏗️ High-Level Design (HLD)
+
+### System Architecture
+The platform follows a clean, event-driven architecture to ensure high performance and efficient task offloading.
 
 ```mermaid
-graph TD
-    subgraph "Frontend (Angular 19)"
-        UI[PWA Dashboard]
-        JS[Job Search UI]
+flowchart TD
+    %% Define Nodes
+    Client["🌐 Personal Dashboard (Angular 20)"]
+    
+    subgraph Backend_App [Backend Core - Spring Boot 3.5]
+        direction TB
+        Controllers["🔌 REST & WebSocket Gateway"]
+        Services["⚙️ Business Logic (AtsService, AiService)"]
+        Consumers["👷 Kafka Async Workers"]
     end
 
-    subgraph "Backend (Spring Boot 3.5)"
-        API[REST & WebSocket Controller]
-        SCH[Analysis Engine]
-        KB[Kafka Event Bus]
-    end
+    DB[("🐘 PostgreSQL")]
+    Redis[("🚀 Redis (Caching & Rate Limiting)")]
+    Kafka["📨 Kafka (Event Bus)"]
+    LLM["🧠 AI Models (Gemini / Ollama)"]
 
-    subgraph "External AI & Data"
-        LLM[Gemini / Ollama / OpenRouter]
-        SCR[LinkedIn Scraper API]
-    end
-
-    UI --> API
-    JS --> API
-    API --> SCH
-    SCH --> LLM
-    API --> KB
-    KB --> SCR
-    SCR --> JS
-    API --> DB[(PostgreSQL + pgvector)]
-    API --> RD[(Redis Cache)]
+    %% Define Relationships
+    Client <==>|Bi-directional WS / REST| Controllers
+    Controllers --- Services
+    Services ---|Persist State| DB
+    Services ---|Cache / Limit| Redis
+    Services ---|Trigger Analysis| Kafka
+    
+    Kafka --- Consumers
+    Consumers ---|AI Inference| LLM
+    Consumers ---|Update Results| DB
+    
+    style Backend_App fill:#f8f9fa,stroke:#333,stroke-width:2px,color:#333
+    style Client fill:#e3f2fd,stroke:#1976d2,color:#000
 ```
+
+### Core Data Flow: Resume Analysis
+1. **Request**: User uploads a resume and pastes a JD.
+2. **Preprocessing**: Apache Tika extracts text; Spring AI prepares the prompt.
+3. **Queueing**: A job event is published to **Kafka** to handle the heavy AI lifting asynchronously.
+4. **Processing**: A worker consumes the event, invokes the **LLM (Gemini/Ollama)**, and calculates the **ATS Score**.
+5. **Real-time Feedback**: Progress and results are pushed back to the client via **STOMP/WebSockets**.
+6. **Storage**: Final analysis and application history are stored in **PostgreSQL** for persistence and tracking.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Java 21, Spring Boot 3.5, Spring AI, Spring Kafka
-- **Frontend**: Angular 19, PrimeNG 19, RxJS, PWA (Service Workers)
-- **Data**: PostgreSQL 16 (pgvector), Redis 7
-- **Infrastructure**: Docker Compose, Kafka (KRaft mode), Flyway
-- **Tools**: Apache Tika (Extraction), OpenPDF (Generation)
+| Category | Technologies |
+| :--- | :--- |
+| **Backend** | Java 21, Spring Boot 3.5.x, Spring AI, Spring Security (OAuth2/JWT), Spring Kafka |
+| **AI/ML** | Google Gemini 2.5, Ollama (Llama 3.2), Apache Tika |
+| **Frontend** | Angular 20, PrimeNG 20, RxJS |
+| **Database** | PostgreSQL 17, Redis 7 (Caching & Rate Limiting) |
+| **Infrastructure**| Docker, Docker Compose, Flyway (Migrations) |
+| **Dev Tools** | Maven, Git, Swagger / OpenAPI 3.0 |
 
 ---
 
-## 🔧 API Highlights
+## 📁 Project Structure
 
-| Category | Endpoint | Method | Description |
-| :--- | :--- | :--- | :--- |
-| **Analysis** | `/api/ai/analyze` | POST | Triggers asynchronous resume analysis via WebSocket. |
-| **Scraper** | `/api/scraper/search` | POST | Initiates an async LinkedIn job search. |
-| **Scraper** | `/api/scraper/details` | POST | Fetches full job details for a specific LinkedIn URL. |
-| **Tracker** | `/api/applications` | POST/GET | Manage job application records. |
-| **Backup** | `/api/applications/export` | GET | Download application history as CSV. |
+```text
+├── career-align-intelligence (Backend)
+│   ├── src/main/java/com/nit/
+│   │   ├── config/      # Security, AI, WebSocket configs
+│   │   ├── controller/  # REST Endpoints
+│   │   ├── service/     # Core logic (AI, ATS, Kafka)
+│   │   └── entity/      # JPA Models
+│   └── src/main/resources/
+│       └── db/migration # Flyway scripts
+└── ResumeAi (Frontend)
+    ├── src/app/
+    │   ├── shared/      # Components, Models
+    │   ├── core/        # Services, Guards
+    │   └── features/    # Main modules (Dashboard, Analysis)
+    └── angular.json
+```
+
+---
+
+## 🔧 Getting Started
+
+### Prerequisites
+- JDK 21+
+- Node.js 20+
+- Docker & Docker Compose
+- (Optional) Ollama running locally or Google Gemini API Key
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/nitin-manjhi/career-align-intelligence.git
+   ```
+
+2. **Configure Environment**
+   Rename `.env.example` to `.env` and fill in your API keys and database credentials.
+
+3. **Spin up Infrastructure**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Run Backend**
+   ```bash
+   cd career-align-intelligence
+   ./mvnw spring-boot:run
+   ```
+
+5. **Run Frontend**
+   ```bash
+   cd ResumeAi
+   npm install
+   npm start
+   ```
 
 ---
 
 ## 👤 Author
-**Nitin Manjhi**
-*Full-Stack & AI Integration Engineer*
+
+**Nitin Manjhi**  
+*Full-Stack & AI Integration Engineer*  
+[LinkedIn](https://www.linkedin.com/in/nitinmanjhi) | [GitHub](https://github.com/nitin-manjhi) | [Portfolio](https://nitinmanjhi.com)
+
+---
+*Developed with ❤️ to empower job seekers in the AI era.*

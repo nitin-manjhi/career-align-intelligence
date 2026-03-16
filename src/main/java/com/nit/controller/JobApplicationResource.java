@@ -35,6 +35,11 @@ public class JobApplicationResource {
         return ResponseEntity.ok(service.getApplications(search, status, pageable));
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<com.nit.dto.JobApplicationStatsDTO> getStats() {
+        return ResponseEntity.ok(service.getStats());
+    }
+
     @PostMapping
     public ResponseEntity<JobApplicationDTO> createApplication(@Valid @RequestBody JobApplicationDTO dto) {
         return ResponseEntity.ok(service.createApplication(dto));
