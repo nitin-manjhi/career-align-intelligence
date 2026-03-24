@@ -59,6 +59,9 @@ public class User implements UserDetails {
     @Builder.Default
     Integer premiumUsageCount = 0;
 
+    @Builder.Default
+    boolean suspended = false;
+
     @CreationTimestamp
     Instant createdAt;
 

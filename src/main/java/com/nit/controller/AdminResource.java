@@ -34,10 +34,11 @@ public class AdminResource {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Boolean premiumActive,
             @RequestParam(required = false) Integer premiumUsageLimit,
-            @RequestParam(required = false) Integer premiumUsageCount) {
+            @RequestParam(required = false) Integer premiumUsageCount,
+            @RequestParam(required = false) Boolean suspended) {
         return ResponseEntity
                 .ok(adminService.updateUserUsage(userId, analysisCount, generationCount, usageLimit, generationLimit,
-                        role, premiumActive, premiumUsageLimit, premiumUsageCount));
+                        role, premiumActive, premiumUsageLimit, premiumUsageCount, suspended));
     }
 
     @GetMapping("/upgrade-requests")
@@ -52,6 +53,12 @@ public class AdminResource {
             @RequestParam(required = false) Integer newLimit) {
         adminService.processUpgradeRequest(requestId, status, newLimit);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        adminService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 
 }

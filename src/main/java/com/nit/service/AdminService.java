@@ -10,11 +10,15 @@ public interface AdminService {
 
     UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount, Integer usageLimit,
             Integer generationLimit, String role, Boolean premiumActive, Integer premiumUsageLimit,
-            Integer premiumUsageCount);
+            Integer premiumUsageCount, Boolean suspended);
 
     List<UpgradeRequestResponse> getPendingUpgradeRequests();
 
     void processUpgradeRequest(Long requestId, String status, Integer newLimit);
 
     void createUpgradeRequest(String reason);
+    
+    void requestUnsuspension();
+
+    void deleteUser(Long userId);
 }

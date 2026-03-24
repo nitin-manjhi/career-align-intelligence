@@ -95,6 +95,11 @@ cors:
 
 app:
   scraper-api-url: ${SCRAPER_API_URL:http://localhost:3000}
+  db:
+    automation:
+      container-name: ${DB_CONTAINER_NAME:resume-postgres-db}
+      backup-dir: ${DB_BACKUP_DIR:./backups}
+      cron: ${DB_BACKUP_CRON:0 0 2 * * ?} # Daily at 2 AM
 
 server:
   port: 8080
