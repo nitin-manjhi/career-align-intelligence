@@ -62,4 +62,10 @@ public class AuthResource {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/request-unsuspension")
+    public ResponseEntity<Void> requestUnsuspension() {
+        adminService.requestUnsuspension();
+        return ResponseEntity.ok().build();
+    }
+
 }

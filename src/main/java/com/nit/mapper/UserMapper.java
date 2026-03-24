@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(target = "premiumActive", ignore = true)
     @Mapping(target = "premiumUsageLimit", ignore = true)
     @Mapping(target = "premiumUsageCount", ignore = true)
+    @Mapping(target = "suspended", ignore = true)
     User toEntity(SignupRequest signupRequest);
 
     @Mapping(target = "premiumActive", expression = "java(user.getRole() == com.nit.entity.Role.ADMIN || user.isPremiumActive())")

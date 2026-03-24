@@ -35,6 +35,14 @@ public class AdminServiceImpl implements AdminService {
         messagingTemplate.convertAndSend(destination, payload);
     }
 
+    private void notifyAdmins(String message, String type) {
+        String destination = "/topic/admin-events";
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("type", type);
+        payload.put("message", message);
+        messagingTemplate.convertAndSend(destination, payload);
+    }
+
     @Override
     public List<UserProfileResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -46,7 +54,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public UserUsageResponse updateUserUsage(Long userId, Integer analysisCount, Integer generationCount,
             Integer usageLimit, Integer generationLimit, String role, Boolean premiumActive, Integer premiumUsageLimit,
-            Integer premiumUsageCount) {
+            Integer premiumUsageCount, Boolean suspended) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
 
@@ -70,11 +78,14 @@ public class AdminServiceImpl implements AdminService {
         if (premiumUsageCount != null) {
             user.setPremiumUsageCount(premiumUsageCount);
         }
+        if (suspended != null) {
+            user.setSuspended(suspended);
+        }
 
         User savedUser = userRepository.save(user);
 
         // Notify user about update via WebSocket
-        notifyQuotaUpdate(savedUser.getId(), "Your usage limit or premium status has been updated.");
+        notifyQuotaUpdate(savedUser.getId(), "Your account status or usage limits have been updated.");
 
         return new UserUsageResponse(
                 savedUser.getId(),
@@ -85,7 +96,8 @@ public class AdminServiceImpl implements AdminService {
                 savedUser.getRole().name(),
                 savedUser.isPremiumActive(),
                 savedUser.getPremiumUsageLimit(),
-                savedUser.getPremiumUsageCount());
+                savedUser.getPremiumUsageCount(),
+                savedUser.isSuspended());
     }
 
     @Override
@@ -137,5 +149,25 @@ public class AdminServiceImpl implements AdminService {
                 .build();
 
         upgradeRequestRepository.save(request);
+    }
+
+    @Override
+    @Transactional
+    public void requestUnsuspension() {
+        Long userId = authUtil.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId.toString()));
+        
+        notifyAdmins("User " + user.getUsername() + " has requested account unsuspension.", "UNSUSPENSION_REQUEST");
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User", userId.toString());
+        }
+        upgradeRequestRepository.deleteByUserId(userId);
+        userRepository.deleteById(userId);
     }
 }

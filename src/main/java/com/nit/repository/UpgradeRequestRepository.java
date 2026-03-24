@@ -11,4 +11,6 @@ public interface UpgradeRequestRepository extends JpaRepository<UpgradeRequest, 
     List<UpgradeRequest> findAllByOrderByCreatedAtDesc();
 
     List<UpgradeRequest> findByStatusOrderByCreatedAtDesc(UpgradeRequest.RequestStatus status);
+
+    void deleteByUserId(Long userId);
 }
