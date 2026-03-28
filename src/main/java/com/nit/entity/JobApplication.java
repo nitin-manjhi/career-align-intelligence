@@ -68,6 +68,9 @@ public class JobApplication {
     @Column(name = "apply_link", length = 1000)
     private String applyLink;
 
+    @Column(name = "job_portal")
+    private String jobPortal;
+
     @Column(name = "original_posted_date")
     private String originalPostedDate;
 

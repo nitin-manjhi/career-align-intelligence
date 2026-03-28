@@ -108,6 +108,7 @@ public class JobApplicationService {
         application.setSalary(dto.getSalary());
         application.setSkills(dto.getSkills());
         application.setApplyLink(dto.getApplyLink());
+        application.setJobPortal(dto.getJobPortal());
         application.setOriginalPostedDate(dto.getOriginalPostedDate());
 
         return toDTO(repository.save(application));
@@ -206,6 +207,7 @@ public class JobApplicationService {
         dto.setSalary(application.getSalary());
         dto.setSkills(application.getSkills());
         dto.setApplyLink(application.getApplyLink());
+        dto.setJobPortal(application.getJobPortal());
         dto.setOriginalPostedDate(application.getOriginalPostedDate());
         dto.setAnalysisId(application.getAnalysisId());
         return dto;
@@ -228,6 +230,7 @@ public class JobApplicationService {
                 .salary(dto.getSalary())
                 .skills(dto.getSkills())
                 .applyLink(dto.getApplyLink())
+                .jobPortal(dto.getJobPortal())
                 .originalPostedDate(dto.getOriginalPostedDate())
                 .analysisId(dto.getAnalysisId())
                 .build();

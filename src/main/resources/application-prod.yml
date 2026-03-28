@@ -1,21 +1,45 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5433/resumeDb?options=-c%20timezone=Asia/Kolkata
-    username: postgres
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres123}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      timeout: 60000
   kafka:
-    bootstrap-servers: kafka:19092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+
+  ai:
+    openai:
+      api-key: ${OPENROUTER_API_KEY}
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
 
   ollama:
     cloud:
-      base-url: ${OLLAMA_BASE_URL:https://ollama.com}
-      chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
-      api-key: ${OLLAMA_API_KEY:}
+      base-url: ${OLLAMA_CHAT_URL}
+      chat-model: ${OLLAMA_MODEL}
+      api-key: ${OLLAMA_API_KEY}
 
 logging:
   level:
     org.springframework.ai: INFO
+
+jwt:
+  secret-key: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+app:
+  scraper-api-url: ${SCRAPER_API_URL}
+  db:
+    automation:
+      container-name: ${DB_CONTAINER_NAME}
+      backup-dir: ${DB_BACKUP_DIR}
+      cron: ${DB_BACKUP_CRON}

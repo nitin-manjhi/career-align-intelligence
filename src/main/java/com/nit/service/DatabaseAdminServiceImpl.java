@@ -34,8 +34,39 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
     private String backupDir;
 
     private String getDbName() {
-        // jdbc:postgresql://localhost:5433/resumeDb -> resumeDb
-        return dbUrl.substring(dbUrl.lastIndexOf("/") + 1);
+        return getDbPart("database");
+    }
+
+    private String getDbHost() {
+        return getDbPart("host");
+    }
+
+    private String getDbPort() {
+        return getDbPart("port");
+    }
+
+    private String getDbPart(String part) {
+        // jdbc:postgresql://localhost:5433/resumeDb
+        try {
+            String cleanUrl = dbUrl.replace("jdbc:", "");
+            java.net.URI uri = new java.net.URI(cleanUrl);
+            return switch (part) {
+                case "host" -> uri.getHost();
+                case "port" -> String.valueOf(uri.getPort() == -1 ? 5432 : uri.getPort());
+                case "database" -> {
+                    String path = uri.getPath();
+                    yield (path != null && path.length() > 1) ? path.substring(1) : dbUrl.substring(dbUrl.lastIndexOf("/") + 1);
+                }
+                default -> "";
+            };
+        } catch (Exception e) {
+            log.error("Failed to parse dbUrl: {}", dbUrl, e);
+            // Fallback for simple parsing if URI fails
+            if ("database".equals(part)) {
+                return dbUrl.substring(dbUrl.lastIndexOf("/") + 1);
+            }
+            return "";
+        }
     }
 
     @Override
@@ -56,11 +87,13 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
         File backupFile = backupPath.resolve(fileName).toFile();
         
-        // Command: docker exec -i <container> pg_dump -U <user> <db_name>
+        String dbHost = getDbHost();
+        String dbPort = getDbPort();
+        
+        // Command: pg_dump -h <host> -p <port> -U <user> <db_name>
         // We set PGPASSWORD environment variable to avoid prompt
         ProcessBuilder pb = new ProcessBuilder(
-                "docker", "exec", "-i", dbContainerName,
-                "pg_dump", "-U", dbUser, dbName
+                "pg_dump", "-h", dbHost, "-p", dbPort, "-U", dbUser, dbName
         );
         pb.environment().put("PGPASSWORD", dbPassword);
         
@@ -104,12 +137,13 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
             throw new RuntimeException("Backup file not found: " + backupFilePath);
         }
 
+        String dbHost = getDbHost();
+        String dbPort = getDbPort();
         String dbName = getDbName();
         
-        // Command: docker exec -i <container> psql -U <user> <db_name>
+        // Command: psql -h <host> -p <port> -U <user> <db_name>
         ProcessBuilder pb = new ProcessBuilder(
-                "docker", "exec", "-i", dbContainerName,
-                "psql", "-U", dbUser, dbName
+                "psql", "-h", dbHost, "-p", dbPort, "-U", dbUser, dbName
         );
         pb.environment().put("PGPASSWORD", dbPassword);
 
