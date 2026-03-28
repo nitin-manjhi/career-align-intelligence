@@ -82,6 +82,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+#    image: nitinmanitcse/career-align-intelligence-backend:latest
     container_name: resume-backend
     depends_on:
       postgres:
@@ -92,8 +93,10 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+      - "5005:5005" # For remote debugging
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/resumeDb?options=-c%20timezone=Asia/Kolkata
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
@@ -105,6 +108,8 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,https://simulation-least-lauren-venice.trycloudflare.com}
       TZ: Asia/Kolkata
       SCRAPER_API_URL: http://linkedin-scraper-api:3000
+      JWT_SECRET: ${JWT_SECRET:-dGhpcy1pcy1hLXZlcnktc3Ryb25nLXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LXdoaWNoLWlzLWF0LWxlYXN0LTMyLWNoYXJhY3RlcnMtslong-}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
     networks:
       - resume-net
     deploy:
@@ -135,6 +140,7 @@ services:
     build:
       context: ../ResumeAi
       dockerfile: Dockerfile
+#    image: nitinmanitcse/career-align-intelligence-frontend:latest
     container_name: resume-frontend
     depends_on:
       - backend

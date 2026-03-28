@@ -20,7 +20,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NotNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(String.valueOf(allowedOrigins))
+                        .allowedOrigins(allowedOrigins.toArray(new String[0]))
                         // Allow Angular  app to access
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")

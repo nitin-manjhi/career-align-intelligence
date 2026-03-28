@@ -34,6 +34,7 @@ public class JobApplicationDTO {
     private String salary;
     private String skills;
     private String applyLink;
+    private String jobPortal;
     private String originalPostedDate;
     private java.util.UUID analysisId;
 }

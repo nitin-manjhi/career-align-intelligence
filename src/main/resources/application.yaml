@@ -1,6 +1,9 @@
-kafka.topic.analysis-job-topic: RESUME.AI.ANALYSIS_JOB_TOPIC
-kafka.topic.skill-analysis-job-topic: SKILL.AI.ANALYSIS_JOB_TOPIC
-kafka.topic.job-search-topic: JOB_SEARCH_TOPIC
+kafka:
+  topic:
+    analysis-job-topic: RESUME.AI.ANALYSIS_JOB_TOPIC
+    skill-analysis-job-topic: SKILL.AI.ANALYSIS_JOB_TOPIC
+    job-search-topic: JOB_SEARCH_TOPIC
+
 spring:
   application:
     name: career-align-intelligence
@@ -11,15 +14,7 @@ spring:
       - org.springframework.ai.autoconfigure.openai.OpenAiEmbeddingAutoConfiguration
       - org.springframework.ai.autoconfigure.google.genai.GoogleGenAiEmbeddingAutoConfiguration
 
-  #redis configuration for caching and session management
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-      timeout: 60000
-  # kafka configuration for both producer and consumer
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -29,36 +24,18 @@ spring:
     ai:
       chat-provider: cloud
 
-  # Ollama Model Configurations
-  ollama:
-    cloud:
-      base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
-      chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
-      api-key: ${OLLAMA_API_KEY:}
-
-  # Spring AI Standard Configurations
+  # Spring AI Standard Configurations - Global defaults that don't depend on credentials
   ai:
     openai:
-      api-key: ${OPENROUTER_API_KEY:REQUIRED_FOR_OPENROUTER}
-      # Crucial: Redirect to OpenRouter
       base-url: https://openrouter.ai/api
       chat:
         options:
           model: nvidia/nemotron-3-nano-30b-a3b:free
-
     google:
       genai:
-        api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
         chat:
           options:
             model: gemini-2.5-flash-lite
-
-  # DB configuration
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/resumeDb}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres123}
-    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
@@ -85,21 +62,6 @@ logging:
   level:
     org.springframework.ai:
       chat.client: DEBUG
-
-jwt:
-  secret-key: ${JWT_SECRET:}
-  expiration-ms: ${JWT_EXPIRATION_MS:360000}
-
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}
-
-app:
-  scraper-api-url: ${SCRAPER_API_URL:http://localhost:3000}
-  db:
-    automation:
-      container-name: ${DB_CONTAINER_NAME:resume-postgres-db}
-      backup-dir: ${DB_BACKUP_DIR:./backups}
-      cron: ${DB_BACKUP_CRON:0 0 2 * * ?} # Daily at 2 AM
 
 server:
   port: 8080

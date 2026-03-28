@@ -6,6 +6,7 @@ import com.nit.entity.AnalysisResultEntity;
 import com.nit.repository.AnalysisJobRepository;
 import com.nit.repository.AnalysisResultRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class AnalysisJobConsumer {
 
     private final AnalysisJobRepository jobRepo;
@@ -24,7 +26,7 @@ public class AnalysisJobConsumer {
 
     @KafkaListener(topics = "RESUME.AI.ANALYSIS_JOB_TOPIC", groupId = "analysis-group")
     public void processResumeAnalysis(String jobIdStr) {
-
+        log.info("Consumer EVENT to topic: {}", jobIdStr);
         UUID jobId = UUID.fromString(jobIdStr);
         AnalysisJob job = jobRepo.findById(jobId).orElseThrow();
         AnalysisResultEntity analysisResultEntity = repository.findById(job.getResultId()).orElseThrow();

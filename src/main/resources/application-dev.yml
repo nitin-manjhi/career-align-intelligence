@@ -3,23 +3,45 @@ spring:
     url: jdbc:postgresql://localhost:5433/resumeDb
     username: postgres
     password: postgres123
+    driver-class-name: org.postgresql.Driver
   data:
     redis:
       host: localhost
       port: 6379
+      timeout: 60000
   kafka:
     bootstrap-servers: localhost:9092
-
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:REQUIRED_FOR_OPENAI}
+      api-key: ${OPENROUTER_API_KEY:REQUIRED_FOR_OPENROUTER}
+      base-url: https://openrouter.ai/api
+      chat:
+        options:
+          model: nvidia/nemotron-3-nano-30b-a3b:free
     google:
       genai:
         api-key: ${GEMINI_API_KEY:REQUIRED_FOR_GEMINI}
-
+        chat:
+          options:
+            model: gemini-2.5-flash-lite
   ollama:
     cloud:
       base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
-      chat-model: ${OLLAMA_MODEL:minimax-m2.5:cloud}
+      chat-model: gemini-3-flash-preview:cloud
+      api-key: ${OLLAMA_API_KEY:}
+
 jwt:
+  # Using a generated 256-bit hex secret key for modern HS256/HS512 compatibility
+  secret-key: ${JWT_SECRET:d3910c29f633ed4e5251a37c80529d780962b8e3a29023194a087d3550882798e16cc56b78d5e165d4b553e6b83f5c76c5b05786dd78912e9b8635c912e564d2}
   expiration-ms: 360000 # 6 minutes for local development
+
+cors:
+  allowed-origins: http://localhost:4200,http://localhost
+
+app:
+  scraper-api-url: http://localhost:3000
+  db:
+    automation:
+      container-name: resume-postgres-db
+      backup-dir: ./backups
+      cron: 0 0 2 * * ?
