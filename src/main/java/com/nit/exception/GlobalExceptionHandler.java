@@ -86,6 +86,18 @@ public class GlobalExceptionHandler {
                                 request);
         }
 
+        @ExceptionHandler(com.nit.exception.AccountNotApprovedException.class)
+        public ResponseEntity<ApiError> handleUnapproved(
+                        com.nit.exception.AccountNotApprovedException ex,
+                        HttpServletRequest request) {
+
+                return buildError(
+                                HttpStatus.FORBIDDEN,
+                                "ACCOUNT_NOT_APPROVED",
+                                ex.getMessage(),
+                                request);
+        }
+
         // ===== Catch-all (VERY IMPORTANT) =====
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiError> handleGeneric(
