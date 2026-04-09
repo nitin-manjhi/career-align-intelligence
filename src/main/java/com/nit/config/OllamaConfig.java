@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ReactorClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
@@ -44,9 +45,15 @@ public class OllamaConfig {
                 .messageConverters(converters -> {
                     converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
                 });
+
+        // WebClient for streaming (.stream()) — needs the same auth header
+        WebClient.Builder webClientBuilder = WebClient.builder()
+                        .defaultHeader("Authorization", apiKey);
+
         return OllamaApi.builder()
                 .baseUrl(baseUrl)
                 .restClientBuilder(customBuilder)
+                .webClientBuilder(webClientBuilder)
                 .build();
     }
 

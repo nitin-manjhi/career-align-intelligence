@@ -62,6 +62,9 @@ public class User implements UserDetails {
     @Builder.Default
     boolean suspended = false;
 
+    @Builder.Default
+    boolean enabled = false;
+
     @CreationTimestamp
     Instant createdAt;
 

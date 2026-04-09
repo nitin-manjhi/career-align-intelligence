@@ -27,7 +27,7 @@ spring:
   ollama:
     cloud:
       base-url: ${OLLAMA_CHAT_URL:https://ollama.com}
-      chat-model: gemini-3-flash-preview:cloud
+      chat-model: minimax-m2.5:cloud
       api-key: ${OLLAMA_API_KEY:}
 
 jwt:
