@@ -9,7 +9,8 @@
 
 **CareerAlign Intelligence** is a cutting-edge, enterprise-grade platform designed to revolutionize the way candidates navigate the modern job market. By leveraging multi-LLM orchestration (Google Gemini & Ollama) and advanced textual analysis, it provides deep resume analysis, real-time LinkedIn job scraping, and intelligent ATS scoring.
 
-Built with **Spring Boot 3.5 (Java 21)** and **Angular 20**, this project showcases a robust modular architecture, event-driven processing via **Kafka**, and real-time state management through **WebSockets**.
+Built with **Spring Boot 3.5 (Java 21)** and **Angular 21**, this project showcases a robust modular architecture, event-driven processing via **Kafka**, and real-time state management through **WebSockets**.
+
 
 ---
 
@@ -23,13 +24,22 @@ Built with **Spring Boot 3.5 (Java 21)** and **Angular 20**, this project showca
 - **Semantic ATS Scoring**: Beyond simple keyword matching—analyzes professional context and experience relevance to score resumes against Job Descriptions (JD).
 - **Skill Weighting**: Custom importance weighting for "Required" vs "Optional" skills, simulating real-world recruiter priorities.
 
-### 🔍 Real-time LinkedIn Ecosystem
-- **Intelligent Scraper**: A Playwright-powered engine that fetches live LinkedIn jobs based on location, experience, and remote status.
-- **Deep Job Analysis**: Automatically extracts required skills and job nuances from scraping results.
-- **One-Click Tracking**: Seamlessly move scraped jobs into your personal tracking dashboard.
+### 🎙️ AI Interview Preparation
+- **Dynamic Question Generation**: REST & WebSocket-based generation of technical (topic-wise) and behavioral (scenario-based) questions.
+- **Contextual Intelligence**: Leverages specialized prompts to simulate realistic interview environments.
+- **Persistence Layer**: Automated storage of preparation results for progress review and long-term learning.
+
+
+### 🔍 Native LinkedIn Scraper
+- **Performance-Driven Engine**: Migrated from external services to a native **Java Playwright** implementation for increased reliability and speed.
+- **Deep Job Analysis**: Automatically extracts required skills, job location, and portal nuances directly from LinkedIn.
+- **One-Click Tracking**: Seamlessly move scraped jobs into your tracking dashboard with pre-filled metadata.
+
 
 ### 📋 Enterprise Job Tracker
+- **Enhanced Data Points**: New support for tracking **Job Title**, **Location**, and **Job Portal** for every application.
 - **Stage Management**: Full lifecycle tracking from `INITIALIZED` to `SELECTED` with dynamic color-coded status tags.
+
 - **Strategic Stats Dashboard**: A high-end analytics hub with:
     - **KPI Cards**: Real-time tracking of total applications, recent 7-day velocity, and AI-aligned reports.
     - **Status Distribution**: A grid-based visualization of conversion rates (Applied vs Interviewing).
@@ -94,9 +104,10 @@ flowchart TD
 
 | Category | Technologies |
 | :--- | :--- |
-| **Backend** | Java 21, Spring Boot 3.5.x, Spring AI, Spring Security (OAuth2/JWT), Spring Kafka |
-| **AI/ML** | Google Gemini 2.5, Ollama (Llama 3.2), Apache Tika |
-| **Frontend** | Angular 20, PrimeNG 20, RxJS |
+| **Backend** | Java 21, Spring Boot 3.5.x, Spring AI, Java Playwright, Spring Security, Spring Kafka |
+| **AI/ML** | Google Gemini 2.5 Flash, Ollama (Llama 3.2), Apache Tika |
+| **Frontend** | Angular 21, PrimeNG 19, RxJS |
+
 | **Database** | PostgreSQL 17, Redis 7 (Caching & Rate Limiting) |
 | **Infrastructure**| Docker, Docker Compose, Flyway (Migrations) |
 | **Dev Tools** | Maven, Git, Swagger / OpenAPI 3.0 |
