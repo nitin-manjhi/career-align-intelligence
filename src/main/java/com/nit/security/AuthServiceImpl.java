@@ -85,6 +85,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.username())
+                .or(() -> userRepository.findByEmail(request.username()))
                 .orElseThrow(() -> new BadRequestException("Account does not exist. Please sign up."));
 
         try {
