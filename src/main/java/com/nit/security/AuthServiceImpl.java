@@ -1,5 +1,7 @@
 package com.nit.security;
 
+import java.util.Base64;
+
 import com.nit.dto.auth.AuthResponse;
 import com.nit.dto.auth.ForgotPasswordRequest;
 import com.nit.dto.auth.LoginRequest;
@@ -51,6 +53,16 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    private String decodePassword(String encodedPassword) {
+        if (encodedPassword == null) return null;
+        try {
+            return new String(Base64.getDecoder().decode(encodedPassword));
+        } catch (IllegalArgumentException e) {
+            log.warn("Password was not Base64 encoded, using as is");
+            return encodedPassword;
+        }
+    }
+
     @Override
     @org.springframework.transaction.annotation.Transactional
     public AuthResponse signup(SignupRequest request) {
@@ -63,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPassword(passwordEncoder.encode(decodePassword(request.password())));
         if (request.email().toLowerCase().contains("admin")) {
             user.setRole(Role.ADMIN);
             user.setEnabled(true);
@@ -90,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+                    new UsernamePasswordAuthenticationToken(request.username(), decodePassword(request.password())));
             
             user = (User) authentication.getPrincipal();
         } catch (DisabledException e) {
@@ -135,11 +147,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadRequestException("User not found with email: " + request.email()));
 
-        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
+        String oldPassword = decodePassword(request.oldPassword());
+        String newPassword = decodePassword(request.newPassword());
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new BadRequestException("Current password verification failed. You must provide the correct current password to request a reset.");
         }
 
-        if (request.newPassword() == null || request.newPassword().isBlank()) {
+        if (newPassword == null || newPassword.isBlank()) {
             throw new BadRequestException("New password cannot be empty");
         }
 
@@ -149,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
         // Create new pending request
         PasswordResetRequest resetRequest = PasswordResetRequest.builder()
                 .user(user)
-                .newPassword(passwordEncoder.encode(request.newPassword()))
+                .newPassword(passwordEncoder.encode(newPassword))
                 .requestedAt(java.time.Instant.now())
                 .build();
         
